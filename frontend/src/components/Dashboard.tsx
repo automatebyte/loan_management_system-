@@ -3,6 +3,7 @@ import { Box, AppBar, Toolbar, Typography, Button, Grid, Card, CardContent } fro
 import { useNavigate } from 'react-router-dom';
 import LoanList from './LoanList';
 import LoanApplication from './LoanApplication';
+import Reports from './Reports';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -59,10 +60,21 @@ const Dashboard: React.FC = () => {
               </Button>
             </Grid>
           )}
+          {user.role !== 'client' && (
+            <Grid item>
+              <Button 
+                variant={activeTab === 'reports' ? 'contained' : 'outlined'}
+                onClick={() => setActiveTab('reports')}
+              >
+                Reports
+              </Button>
+            </Grid>
+          )}
         </Grid>
 
         {activeTab === 'loans' && <LoanList userRole={user.role} />}
         {activeTab === 'apply' && <LoanApplication />}
+        {activeTab === 'reports' && <Reports />}
       </Box>
     </Box>
   );

@@ -5,6 +5,7 @@ from django.utils import timezone
 from .models import LoanProduct, Loan, Payment
 from .serializers import LoanProductSerializer, LoanApplicationSerializer, LoanSerializer, PaymentSerializer
 from apps.accounts.permissions import IsLoanOfficer, IsClient, IsSameCompany
+from .tasks import send_loan_notification
 
 class LoanProductViewSet(viewsets.ModelViewSet):
     serializer_class = LoanProductSerializer
@@ -37,6 +38,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         loan.approval_date = timezone.now()
         loan.loan_officer = request.user
         loan.save()
+        send_loan_notification.delay(loan.id, 'approved')
         return Response({'status': 'approved'})
     
     @action(detail=True, methods=['post'], permission_classes=[IsLoanOfficer])
@@ -47,6 +49,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         loan.status = 'disbursed'
         loan.disbursement_date = timezone.now()
         loan.save()
+        send_loan_notification.delay(loan.id, 'disbursed')
         return Response({'status': 'disbursed'})
 
 class PaymentViewSet(viewsets.ModelViewSet):
