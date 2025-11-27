@@ -1,0 +1,21 @@
+from django.db import models
+from apps.common.models import BaseModel
+
+class Company(BaseModel):
+    """Multi-tenant company model"""
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+    
+    # Subscription settings
+    max_users = models.PositiveIntegerField(default=10)
+    max_loans = models.PositiveIntegerField(default=1000)
+    
+    class Meta:
+        verbose_name_plural = "Companies"
+        
+    def __str__(self):
+        return self.name
