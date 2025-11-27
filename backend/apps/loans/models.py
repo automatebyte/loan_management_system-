@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from apps.common.models import BaseModel
+from .utils import generate_loan_id
 
 class LoanProduct(BaseModel):
     """Loan product configuration per company"""
@@ -39,6 +40,11 @@ class Loan(BaseModel):
     application_date = models.DateTimeField(auto_now_add=True)
     approval_date = models.DateTimeField(null=True, blank=True)
     disbursement_date = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.loan_id:
+            self.loan_id = generate_loan_id()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.loan_id} - {self.client.user.get_full_name()}"

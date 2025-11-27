@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from apps.common.models import BaseModel
+from apps.loans.utils import generate_client_id
 
 class User(AbstractUser):
     """Extended user model with company association"""
@@ -30,6 +31,11 @@ class Client(BaseModel):
         ('self_employed', 'Self Employed'),
         ('unemployed', 'Unemployed'),
     ])
+    
+    def save(self, *args, **kwargs):
+        if not self.client_id:
+            self.client_id = generate_client_id()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.client_id}"

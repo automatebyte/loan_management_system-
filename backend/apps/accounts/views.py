@@ -1,11 +1,13 @@
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer, LoginSerializer, UserSerializer
+from .models import Client
+from .permissions import IsClient
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -41,3 +43,20 @@ def login(request):
 def profile(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsClient])
+def create_client_profile(request):
+    if hasattr(request.user, 'client'):
+        return Response({'error': 'Client profile already exists'}, status=400)
+    
+    data = request.data.copy()
+    data['user'] = request.user.id
+    data['company'] = request.user.company.id
+    
+    from .serializers import ClientSerializer
+    serializer = ClientSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+    return Response(serializer.errors, status=400)
