@@ -19,7 +19,7 @@ class Company(BaseModel):
         ('enterprise', 'Enterprise'),
     ], default='basic')
     subscription_expiry = models.DateField(null=True, blank=True)
-    admin_email = models.EmailField()
+    admin_email = models.EmailField(default='admin@company.com')
     
     class Meta:
         verbose_name_plural = "Companies"

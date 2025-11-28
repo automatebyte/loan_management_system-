@@ -38,3 +38,15 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = '__all__'
         read_only_fields = ['client_id']
+
+class LoanOfficerSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 
+                 'is_active', 'date_joined', 'full_name']
+        read_only_fields = ['id', 'date_joined', 'full_name']
+    
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip() or obj.username

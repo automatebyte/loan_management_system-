@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import LoanList from './LoanList';
 import LoanApplication from './LoanApplication';
 import Reports from './Reports';
+import CompanyAdminDashboard from './CompanyAdminDashboard';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -70,11 +71,22 @@ const Dashboard: React.FC = () => {
               </Button>
             </Grid>
           )}
+          {user.role === 'company_admin' && (
+            <Grid item>
+              <Button 
+                variant={activeTab === 'officers' ? 'contained' : 'outlined'}
+                onClick={() => setActiveTab('officers')}
+              >
+                Loan Officers
+              </Button>
+            </Grid>
+          )}
         </Grid>
 
         {activeTab === 'loans' && <LoanList userRole={user.role} />}
         {activeTab === 'apply' && <LoanApplication />}
         {activeTab === 'reports' && <Reports />}
+        {activeTab === 'officers' && <CompanyAdminDashboard />}
       </Box>
     </Box>
   );
