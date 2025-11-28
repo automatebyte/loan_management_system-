@@ -10,6 +10,8 @@ import CompanyManagementTable from './CompanyManagementTable';
 interface DashboardStats {
   total_companies: number;
   active_subscriptions: number;
+  trial_companies: number;
+  suspended_companies: number;
   pending_renewals: number;
   overdue_payments: number;
   monthly_revenue: number;
@@ -31,9 +33,7 @@ interface Company {
   next_payment_date: string;
   payment_status: string;
   user_count: number;
-  loan_count: number;
-  active_loans: number;
-  total_disbursed: number;
+  days_until_expiry: number;
   last_login: string;
   is_active: boolean;
   created_at: string;
@@ -161,7 +161,7 @@ const SuperAdminDashboard: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Dashboard Stats */}
+      {/* Company & Subscription Management Stats */}
       {stats && (
         <Grid container spacing={3} className="mb-6">
           <Grid item xs={12} sm={6} md={3}>
@@ -181,14 +181,6 @@ const SuperAdminDashboard: React.FC = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard 
-              title="Pending Renewals" 
-              value={stats.pending_renewals} 
-              color="warning"
-              icon={<Warning fontSize="large" />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
               title="Monthly Revenue" 
               value={stats.monthly_revenue} 
               color="info"
@@ -196,17 +188,39 @@ const SuperAdminDashboard: React.FC = () => {
               icon={<AttachMoney fontSize="large" />}
             />
           </Grid>
-        </Grid>
-      )}
-
-      {/* Additional Stats Row */}
-      {stats && (
-        <Grid container spacing={3} className="mb-6">
           <Grid item xs={12} sm={6} md={3}>
             <StatCard 
               title="Overdue Payments" 
               value={stats.overdue_payments} 
               color="error"
+              icon={<Warning fontSize="large" />}
+            />
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Subscription Status Breakdown */}
+      {stats && (
+        <Grid container spacing={3} className="mb-6">
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard 
+              title="Trial Companies" 
+              value={stats.trial_companies} 
+              color="warning"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard 
+              title="Suspended Companies" 
+              value={stats.suspended_companies} 
+              color="error"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard 
+              title="Pending Renewals" 
+              value={stats.pending_renewals} 
+              color="warning"
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -216,28 +230,17 @@ const SuperAdminDashboard: React.FC = () => {
               color="info"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Enterprise Plans" 
-              value={stats.subscription_breakdown.find(s => s.subscription_plan === 'enterprise')?.count || 0} 
-              color="primary"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Trial Accounts" 
-              value={stats.status_breakdown.find(s => s.subscription_status === 'trial')?.count || 0} 
-              color="warning"
-            />
-          </Grid>
         </Grid>
       )}
 
-      {/* Companies Management Table */}
+      {/* Company & Subscription Management Table */}
       <Box className="bg-white rounded-lg shadow">
         <Box className="p-4 border-b">
           <Typography variant="h6" className="font-semibold">
-            Client Companies Management
+            Company & Subscription Management
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Manage client companies, subscriptions, and billing
           </Typography>
         </Box>
         <CompanyManagementTable

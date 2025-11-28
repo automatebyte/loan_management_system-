@@ -21,8 +21,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSubm
     subscription_plan: 'basic',
     subscription_status: 'trial',
     monthly_fee: '99.00',
-    max_users: 10,
-    max_loans: 1000
+    max_users: 10
   });
 
   const handleSubmit = () => {
@@ -37,8 +36,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSubm
       subscription_plan: 'basic',
       subscription_status: 'trial',
       monthly_fee: '99.00',
-      max_users: 10,
-      max_loans: 1000
+      max_users: 10
     });
   };
 
@@ -170,15 +168,16 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onSubm
                 type="number"
                 value={formData.max_users}
                 onChange={(e) => setFormData({ ...formData, max_users: parseInt(e.target.value) })}
+                helperText="Maximum number of users for this company"
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Max Loans"
-                type="number"
-                value={formData.max_loans}
-                onChange={(e) => setFormData({ ...formData, max_loans: parseInt(e.target.value) })}
+                label="Subscription Expiry"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                helperText="Leave empty for no expiry"
               />
             </Grid>
           </Grid>

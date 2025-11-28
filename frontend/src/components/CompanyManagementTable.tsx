@@ -19,9 +19,8 @@ interface Company {
   next_payment_date: string;
   payment_status: string;
   user_count: number;
-  loan_count: number;
-  active_loans: number;
-  total_disbursed: number;
+  max_users: number;
+  days_until_expiry: number;
   last_login: string;
   is_active: boolean;
   created_at: string;
@@ -90,10 +89,10 @@ const CompanyManagementTable: React.FC<CompanyManagementTableProps> = ({
             <TableRow>
               <TableCell><strong>Company</strong></TableCell>
               <TableCell><strong>Contact</strong></TableCell>
-              <TableCell><strong>Plan & Status</strong></TableCell>
+              <TableCell><strong>Subscription</strong></TableCell>
               <TableCell><strong>Monthly Fee</strong></TableCell>
               <TableCell><strong>Payment Status</strong></TableCell>
-              <TableCell><strong>Activity</strong></TableCell>
+              <TableCell><strong>Users</strong></TableCell>
               <TableCell><strong>Last Login</strong></TableCell>
               <TableCell><strong>Actions</strong></TableCell>
             </TableRow>
@@ -150,12 +149,11 @@ const CompanyManagementTable: React.FC<CompanyManagementTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <Box>
-                    <Typography variant="caption">
-                      Users: {company.user_count} | Loans: {company.loan_count}
+                    <Typography variant="body2" className="font-semibold">
+                      {company.user_count} users
                     </Typography>
-                    <br />
                     <Typography variant="caption" color="textSecondary">
-                      Active: {company.active_loans} | Disbursed: {formatCurrency(company.total_disbursed)}
+                      Max: {company.max_users || 'Unlimited'}
                     </Typography>
                   </Box>
                 </TableCell>
