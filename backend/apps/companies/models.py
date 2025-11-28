@@ -13,6 +13,13 @@ class Company(BaseModel):
     # Subscription settings
     max_users = models.PositiveIntegerField(default=10)
     max_loans = models.PositiveIntegerField(default=1000)
+    subscription_plan = models.CharField(max_length=50, choices=[
+        ('basic', 'Basic'),
+        ('premium', 'Premium'),
+        ('enterprise', 'Enterprise'),
+    ], default='basic')
+    subscription_expiry = models.DateField(null=True, blank=True)
+    admin_email = models.EmailField()
     
     class Meta:
         verbose_name_plural = "Companies"

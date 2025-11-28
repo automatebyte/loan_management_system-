@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import SuperAdminDashboard from './components/SuperAdminDashboard';
 
 const theme = createTheme({
   palette: {
@@ -21,6 +22,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </Router>

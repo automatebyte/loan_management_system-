@@ -29,4 +29,12 @@ export const loanAPI = {
   getProducts: () => api.get('/api/loans/products/'),
 };
 
+export const companyAPI = {
+  getCompanies: () => api.get('/api/companies/'),
+  createCompany: (companyData: any) => api.post('/api/companies/', companyData),
+  updateCompany: (id: number, companyData: any) => api.patch(`/api/companies/${id}/`, companyData),
+  getDashboardStats: () => api.get('/api/companies/dashboard_stats/'),
+  getMyCompany: () => api.get('/api/companies/my_company/'),
+};
+
 export default api;
