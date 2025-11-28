@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LoanProduct, Loan, Payment
+from .models import LoanProduct, Loan, Payment, Transaction
 from apps.accounts.models import Client
 
 class LoanProductSerializer(serializers.ModelSerializer):
@@ -31,3 +31,11 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+
+class TransactionSerializer(serializers.ModelSerializer):
+    processed_by_name = serializers.CharField(source='processed_by.get_full_name', read_only=True)
+    
+    class Meta:
+        model = Transaction
+        fields = ['id', 'amount', 'transaction_type', 'transaction_date', 'notes', 'processed_by_name']
+        read_only_fields = ['id', 'transaction_date', 'processed_by_name']

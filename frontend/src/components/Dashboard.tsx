@@ -6,6 +6,7 @@ import LoanApplication from './LoanApplication';
 import Reports from './Reports';
 import CompanyAdminDashboard from './CompanyAdminDashboard';
 import LoanOfficerDashboard from './LoanOfficerDashboard';
+import LoanProductManagement from './LoanProductManagement';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -73,14 +74,24 @@ const Dashboard: React.FC = () => {
             </Grid>
           )}
           {user.role === 'company_admin' && (
-            <Grid item>
-              <Button 
-                variant={activeTab === 'officers' ? 'contained' : 'outlined'}
-                onClick={() => setActiveTab('officers')}
-              >
-                Loan Officers
-              </Button>
-            </Grid>
+            <>
+              <Grid item>
+                <Button 
+                  variant={activeTab === 'officers' ? 'contained' : 'outlined'}
+                  onClick={() => setActiveTab('officers')}
+                >
+                  Loan Officers
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button 
+                  variant={activeTab === 'products' ? 'contained' : 'outlined'}
+                  onClick={() => setActiveTab('products')}
+                >
+                  Loan Products
+                </Button>
+              </Grid>
+            </>
           )}
           {user.role === 'loan_officer' && (
             <Grid item>
@@ -98,6 +109,7 @@ const Dashboard: React.FC = () => {
         {activeTab === 'apply' && <LoanApplication />}
         {activeTab === 'reports' && <Reports />}
         {activeTab === 'officers' && <CompanyAdminDashboard />}
+        {activeTab === 'products' && <LoanProductManagement />}
         {activeTab === 'portfolio' && <LoanOfficerDashboard />}
       </Box>
     </Box>
