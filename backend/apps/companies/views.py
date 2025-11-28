@@ -26,8 +26,30 @@ class CompanyViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsSuperAdmin])
     def dashboard_stats(self, request):
         """Super Admin dashboard statistics"""
+        from django.db.models import Sum
+        from datetime import date, timedelta
+        
         total_companies = Company.objects.count()
-        active_companies = Company.objects.filter(is_active=True).count()
+        active_subscriptions = Company.objects.filter(subscription_status='active').count()
+        
+        # Pending renewals (expiring in next 30 days)
+        pending_renewals = Company.objects.filter(
+            subscription_expiry__lte=date.today() + timedelta(days=30),
+            subscription_status='active'
+        ).count()
+        
+        # Overdue payments (past next_payment_date)
+        overdue_payments = Company.objects.filter(
+            next_payment_date__lt=date.today(),
+            subscription_status__in=['active', 'trial']
+        ).count()
+        
+        # Monthly revenue
+        monthly_revenue = Company.objects.filter(
+            subscription_status='active'
+        ).aggregate(Sum('monthly_fee'))['monthly_fee__sum'] or 0
+        
+        # Recent activity
         recent_companies = Company.objects.filter(
             created_at__gte=timezone.now() - timezone.timedelta(days=30)
         ).count()
@@ -37,12 +59,54 @@ class CompanyViewSet(viewsets.ModelViewSet):
             count=Count('id')
         )
         
+        # Status breakdown
+        status_stats = Company.objects.values('subscription_status').annotate(
+            count=Count('id')
+        )
+        
         return Response({
             'total_companies': total_companies,
-            'active_companies': active_companies,
+            'active_subscriptions': active_subscriptions,
+            'pending_renewals': pending_renewals,
+            'overdue_payments': overdue_payments,
+            'monthly_revenue': float(monthly_revenue),
             'recent_companies': recent_companies,
-            'subscription_breakdown': list(subscription_stats)
+            'subscription_breakdown': list(subscription_stats),
+            'status_breakdown': list(status_stats)
         })
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
+    def update_payment_status(self, request, pk=None):
+        """Update payment status for a company"""
+        company = self.get_object()
+        from datetime import date, timedelta
+        
+        company.last_payment_date = date.today()
+        company.next_payment_date = date.today() + timedelta(days=30)
+        company.subscription_status = 'active'
+        company.save()
+        
+        return Response({'status': 'payment_updated'})
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
+    def suspend_service(self, request, pk=None):
+        """Suspend company service"""
+        company = self.get_object()
+        company.subscription_status = 'suspended'
+        company.is_active = False
+        company.save()
+        
+        return Response({'status': 'suspended'})
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
+    def activate_service(self, request, pk=None):
+        """Activate company service"""
+        company = self.get_object()
+        company.subscription_status = 'active'
+        company.is_active = True
+        company.save()
+        
+        return Response({'status': 'activated'})
     
     @action(detail=False, methods=['get'], permission_classes=[IsCompanyAdmin])
     def my_company(self, request):
