@@ -5,9 +5,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .serializers import UserRegistrationSerializer, LoginSerializer, UserSerializer, ClientSerializer, LoanOfficerSerializer
+from .serializers import (
+    UserRegistrationSerializer, LoginSerializer, UserSerializer, 
+    ClientSerializer, LoanOfficerSerializer, ClientCreateSerializer
+)
 from .models import Client, User
-from .permissions import IsClient, IsCompanyAdmin, IsSameCompany
+from .permissions import IsClient, IsCompanyAdmin, IsSameCompany, IsLoanOfficer
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -95,3 +98,39 @@ class LoanOfficerViewSet(viewsets.ModelViewSet):
         officer.is_active = True
         officer.save()
         return Response({'status': 'activated'})
+
+class ClientViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsLoanOfficer]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ClientCreateSerializer
+        return ClientSerializer
+    
+    def get_queryset(self):
+        """Loan officers can only see clients in their company"""
+        if self.request.user.role == 'super_admin':
+            return Client.objects.all()
+        return Client.objects.filter(company=self.request.user.company)
+    
+    def perform_create(self, serializer):
+        """Assign new client to current user's company and loan officer"""
+        serializer.save(
+            company=self.request.user.company,
+            loan_officer=self.request.user
+        )
+    
+    @action(detail=False, methods=['get'])
+    def my_clients(self, request):
+        """Get clients assigned to current loan officer"""
+        clients = Client.objects.filter(loan_officer=request.user)
+        serializer = self.get_serializer(clients, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def assign_to_me(self, request, pk=None):
+        """Assign client to current loan officer"""
+        client = self.get_object()
+        client.loan_officer = request.user
+        client.save()
+        return Response({'status': 'assigned'})

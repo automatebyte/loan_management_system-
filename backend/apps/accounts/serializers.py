@@ -34,10 +34,20 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 class ClientSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    loan_officer_name = serializers.CharField(source='loan_officer.get_full_name', read_only=True)
+    loan_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = Client
-        fields = '__all__'
-        read_only_fields = ['client_id']
+        fields = ['id', 'client_id', 'full_name', 'email', 'date_of_birth', 'national_id',
+                 'address', 'monthly_income', 'employment_status', 'identification_picture',
+                 'loan_officer_name', 'loan_count', 'created_at', 'is_active']
+        read_only_fields = ['client_id', 'full_name', 'email', 'loan_officer_name', 'loan_count']
+    
+    def get_loan_count(self, obj):
+        return obj.loan_set.count()
 
 class LoanOfficerSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -50,3 +60,35 @@ class LoanOfficerSerializer(serializers.ModelSerializer):
     
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.username
+
+class ClientCreateSerializer(serializers.ModelSerializer):
+    # User fields for creating both user and client
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    password = serializers.CharField(write_only=True, default='client123')
+    
+    class Meta:
+        model = Client
+        fields = ['username', 'email', 'first_name', 'last_name', 'password',
+                 'date_of_birth', 'national_id', 'address', 'monthly_income', 
+                 'employment_status', 'identification_picture']
+    
+    def create(self, validated_data):
+        # Extract user data
+        user_data = {
+            'username': validated_data.pop('username'),
+            'email': validated_data.pop('email'),
+            'first_name': validated_data.pop('first_name'),
+            'last_name': validated_data.pop('last_name'),
+            'password': validated_data.pop('password', 'client123'),
+            'role': 'client'
+        }
+        
+        # Create user
+        user = User.objects.create_user(**user_data)
+        
+        # Create client
+        validated_data['user'] = user
+        return super().create(validated_data)

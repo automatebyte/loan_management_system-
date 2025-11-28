@@ -7,7 +7,9 @@ class LoanProduct(BaseModel):
     """Loan product configuration per company"""
     company = models.ForeignKey('companies.Company', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    penalty_rate = models.DecimalField(max_digits=5, decimal_places=2, default=5.0)
     min_amount = models.DecimalField(max_digits=12, decimal_places=2)
     max_amount = models.DecimalField(max_digits=12, decimal_places=2)
     min_term_months = models.PositiveIntegerField()
@@ -27,6 +29,8 @@ class Loan(BaseModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
     term_months = models.PositiveIntegerField()
+    monthly_payment = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    outstanding_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
     status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
@@ -44,10 +48,28 @@ class Loan(BaseModel):
     def save(self, *args, **kwargs):
         if not self.loan_id:
             self.loan_id = generate_loan_id()
+        if not self.outstanding_balance:
+            self.outstanding_balance = self.amount
         super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.loan_id} - {self.client.user.get_full_name()}"
+
+class Transaction(BaseModel):
+    """Financial transaction model for loan disbursements and repayments"""
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_type = models.CharField(max_length=20, choices=[
+        ('disbursement', 'Disbursement'),
+        ('repayment', 'Repayment'),
+        ('penalty', 'Penalty'),
+    ])
+    transaction_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    processed_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    
+    def __str__(self):
+        return f"{self.loan.loan_id} - {self.transaction_type} - {self.amount}"
 
 class Payment(BaseModel):
     """Loan payment tracking"""

@@ -5,6 +5,7 @@ import LoanList from './LoanList';
 import LoanApplication from './LoanApplication';
 import Reports from './Reports';
 import CompanyAdminDashboard from './CompanyAdminDashboard';
+import LoanOfficerDashboard from './LoanOfficerDashboard';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -81,12 +82,23 @@ const Dashboard: React.FC = () => {
               </Button>
             </Grid>
           )}
+          {user.role === 'loan_officer' && (
+            <Grid item>
+              <Button 
+                variant={activeTab === 'portfolio' ? 'contained' : 'outlined'}
+                onClick={() => setActiveTab('portfolio')}
+              >
+                My Portfolio
+              </Button>
+            </Grid>
+          )}
         </Grid>
 
         {activeTab === 'loans' && <LoanList userRole={user.role} />}
         {activeTab === 'apply' && <LoanApplication />}
         {activeTab === 'reports' && <Reports />}
         {activeTab === 'officers' && <CompanyAdminDashboard />}
+        {activeTab === 'portfolio' && <LoanOfficerDashboard />}
       </Box>
     </Box>
   );
