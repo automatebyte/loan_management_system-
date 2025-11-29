@@ -13,6 +13,8 @@ RUN apt-get update \
         postgresql-client \
         build-essential \
         libpq-dev \
+        netcat-openbsd \
+        libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
