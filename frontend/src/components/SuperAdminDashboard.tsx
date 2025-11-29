@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Grid, Card, CardContent, Typography, Button, Alert
+  Box, Grid, Typography, Button, Alert, useMediaQuery, useTheme
 } from '@mui/material';
 import { Add, Business, TrendingUp, Warning, AttachMoney } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import AddCompanyModal from './AddCompanyModal';
 import CompanyManagementTable from './CompanyManagementTable';
+import CompanyApprovalTable from './CompanyApprovalTable';
+import StatCard from './common/StatCard';
+import ResponsiveNavbar from './common/ResponsiveNavbar';
 
 interface DashboardStats {
   total_companies: number;
@@ -33,10 +37,14 @@ interface Company {
   next_payment_date: string;
   payment_status: string;
   user_count: number;
+  max_users: number;
   days_until_expiry: number;
   last_login: string;
   is_active: boolean;
   created_at: string;
+  business_registration: string;
+  industry: string;
+  estimated_loan_volume: string;
 }
 
 const SuperAdminDashboard: React.FC = () => {
@@ -44,6 +52,9 @@ const SuperAdminDashboard: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -119,76 +130,112 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, color = 'primary', prefix = '' }: any) => (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent>
-        <Box className="flex items-center justify-between">
-          <Box>
-            <Typography color="textSecondary" gutterBottom className="text-sm">
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div" color={color} className="font-bold">
-              {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
-            </Typography>
-          </Box>
-          <Box className="text-gray-400">
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  const handleApproveCompany = async (id: number) => {
+    try {
+      await api.post(`/api/companies/${id}/approve/`);
+      fetchCompanies();
+      fetchDashboardData();
+      setAlert({ type: 'success', message: 'Company approved and activated!' });
+      setTimeout(() => setAlert(null), 3000);
+    } catch (error) {
+      console.error('Error approving company:', error);
+      setAlert({ type: 'error', message: 'Failed to approve company' });
+      setTimeout(() => setAlert(null), 3000);
+    }
+  };
+
+  const handleRejectCompany = async (id: number) => {
+    try {
+      await api.post(`/api/companies/${id}/reject/`);
+      fetchCompanies();
+      fetchDashboardData();
+      setAlert({ type: 'success', message: 'Company registration rejected' });
+      setTimeout(() => setAlert(null), 3000);
+    } catch (error) {
+      console.error('Error rejecting company:', error);
+      setAlert({ type: 'error', message: 'Failed to reject company' });
+      setTimeout(() => setAlert(null), 3000);
+    }
+  };
+
+
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
-    <Box className="p-6 bg-gray-50 min-h-screen">
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <ResponsiveNavbar
+        title="KreditAI"
+        userRole="Super Admin"
+        onLogout={handleLogout}
+      />
+      
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
       {alert && (
         <Alert severity={alert.type} className="mb-4">
           {alert.message}
         </Alert>
       )}
       
-      <Box className="flex justify-between items-center mb-6">
-        <Typography variant="h4" className="font-bold text-gray-800">
-          Super Admin Dashboard
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpenModal(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Register New Company
-        </Button>
-      </Box>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' }, 
+          gap: { xs: 2, sm: 0 },
+          mb: { xs: 3, md: 4 }
+        }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            Dashboard
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={!isMobile ? <Add /> : undefined}
+            onClick={() => setOpenModal(true)}
+            fullWidth={isMobile}
+            sx={{ 
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' },
+              px: 3,
+              py: 1.5
+            }}
+          >
+            {isMobile ? 'Register Company' : 'Register New Company'}
+          </Button>
+        </Box>
 
-      {/* Company & Subscription Management Stats */}
-      {stats && (
-        <Grid container spacing={3} className="mb-6">
-          <Grid item xs={12} sm={6} md={3}>
+        {/* Company & Subscription Management Stats */}
+        {stats && (
+          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
+            <Grid item xs={6} sm={6} md={3}>
             <StatCard 
               title="Total Companies" 
               value={stats.total_companies} 
               icon={<Business fontSize="large" />}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Active Subscriptions" 
-              value={stats.active_subscriptions} 
-              color="success"
-              icon={<TrendingUp fontSize="large" />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Monthly Revenue" 
-              value={stats.monthly_revenue} 
-              color="info"
-              prefix="$"
-              icon={<AttachMoney fontSize="large" />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} sm={6} md={3}>
+              <StatCard 
+                title="Active Subscriptions" 
+                value={stats.active_subscriptions} 
+                color="success"
+                icon={<TrendingUp fontSize="large" />}
+              />
+            </Grid>
+            <Grid item xs={6} sm={6} md={3}>
+              <StatCard 
+                title="Monthly Revenue" 
+                value={stats.monthly_revenue} 
+                color="info"
+                prefix="$"
+                icon={<AttachMoney fontSize="large" />}
+              />
+            </Grid>
+            <Grid item xs={6} sm={6} md={3}>
             <StatCard 
               title="Overdue Payments" 
               value={stats.overdue_payments} 
@@ -196,67 +243,100 @@ const SuperAdminDashboard: React.FC = () => {
               icon={<Warning fontSize="large" />}
             />
           </Grid>
-        </Grid>
-      )}
+          </Grid>
+        )}
 
-      {/* Subscription Status Breakdown */}
-      {stats && (
-        <Grid container spacing={3} className="mb-6">
-          <Grid item xs={12} sm={6} md={3}>
+        {/* Subscription Status Breakdown */}
+        {stats && (
+          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
+            <Grid item xs={6} sm={6} md={3}>
             <StatCard 
               title="Trial Companies" 
               value={stats.trial_companies} 
               color="warning"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Suspended Companies" 
-              value={stats.suspended_companies} 
-              color="error"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard 
-              title="Pending Renewals" 
-              value={stats.pending_renewals} 
-              color="warning"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} sm={6} md={3}>
+              <StatCard 
+                title="Suspended Companies" 
+                value={stats.suspended_companies} 
+                color="error"
+              />
+            </Grid>
+            <Grid item xs={6} sm={6} md={3}>
+              <StatCard 
+                title="Pending Renewals" 
+                value={stats.pending_renewals} 
+                color="warning"
+              />
+            </Grid>
+            <Grid item xs={6} sm={6} md={3}>
             <StatCard 
               title="New This Month" 
               value={stats.recent_companies} 
               color="info"
             />
           </Grid>
-        </Grid>
-      )}
+          </Grid>
+        )}
 
-      {/* Company & Subscription Management Table */}
-      <Box className="bg-white rounded-lg shadow">
-        <Box className="p-4 border-b">
-          <Typography variant="h6" className="font-semibold">
-            Company & Subscription Management
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage client companies, subscriptions, and billing
-          </Typography>
-        </Box>
+        {/* Pending Approvals Section */}
+        {companies.filter(c => c.subscription_status === 'pending_approval').length > 0 && (
+          <Box sx={{ 
+            bgcolor: 'background.paper', 
+            borderRadius: 2, 
+            boxShadow: 1, 
+            border: '1px solid #e5e7eb',
+            overflow: 'hidden',
+            mb: { xs: 3, md: 4 }
+          }}>
+            <Box sx={{ p: { xs: 2, md: 3 }, borderBottom: '1px solid #e5e7eb' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'warning.main' }}>
+                🔔 Pending Approvals ({companies.filter(c => c.subscription_status === 'pending_approval').length})
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                New company registrations awaiting approval
+              </Typography>
+            </Box>
+            <CompanyApprovalTable
+              companies={companies}
+              onApprove={handleApproveCompany}
+              onReject={handleRejectCompany}
+            />
+          </Box>
+        )}
+
+        {/* Company & Subscription Management Table */}
+        <Box sx={{ 
+          bgcolor: 'background.paper', 
+          borderRadius: 2, 
+          boxShadow: 1, 
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
+        }}>
+          <Box sx={{ p: { xs: 2, md: 3 }, borderBottom: '1px solid #e5e7eb' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+              Company Management
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {isMobile ? 'Manage companies & billing' : 'Manage client companies, subscriptions, and billing'}
+            </Typography>
+          </Box>
         <CompanyManagementTable
-          companies={companies}
+          companies={companies.filter(c => c.subscription_status !== 'pending_approval')}
           onUpdatePayment={handleUpdatePayment}
           onSuspendService={handleSuspendService}
           onActivateService={handleActivateService}
         />
-      </Box>
+        </Box>
 
-      {/* Add Company Modal */}
+        {/* Add Company Modal */}
       <AddCompanyModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSubmit={handleCreateCompany}
       />
+      </Box>
     </Box>
   );
 };

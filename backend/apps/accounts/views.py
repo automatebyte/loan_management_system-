@@ -1,6 +1,7 @@
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny
@@ -21,26 +22,47 @@ def register(request):
         return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
+import json
+
+@csrf_exempt
+def test_endpoint(request):
+    return JsonResponse({'status': 'ok', 'message': 'API is working'})
+
+@csrf_exempt  
 def login(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data['user']
-        
-        payload = {
-            'user_id': user.id,
-            'exp': datetime.utcnow() + timedelta(hours=24),
-            'iat': datetime.utcnow()
-        }
-        
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        
-        return Response({
-            'token': token,
-            'user': UserSerializer(user).data
-        })
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            
+            user = authenticate(username=username, password=password)
+            if user:
+                payload = {
+                    'user_id': user.id,
+                    'exp': datetime.utcnow() + timedelta(hours=24),
+                    'iat': datetime.utcnow()
+                }
+                
+                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+                
+                return JsonResponse({
+                    'token': token,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'role': getattr(user, 'role', 'client'),
+                        'company': getattr(user, 'company_id', None)
+                    }
+                })
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @api_view(['GET'])
 def profile(request):

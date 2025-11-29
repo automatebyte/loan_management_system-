@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Grid, Card, CardContent, Typography, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem
+  Box, Grid, Typography, Button, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, Paper, Chip,
+  useMediaQuery, useTheme
 } from '@mui/material';
-import { Edit, Add, Person, AccountBalance, TrendingUp } from '@mui/icons-material';
+import { Edit, Add, Person, AccountBalance, TrendingUp, Payment } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import StatCard from './common/StatCard';
+import ResponsiveNavbar from './common/ResponsiveNavbar';
+import QuickClientAdd from './QuickClientAdd';
+import LoanDisbursement from './LoanDisbursement';
+import RepaymentTracking from './RepaymentTracking';
 
 interface Client {
   id: number;
@@ -28,27 +34,25 @@ interface PortfolioStats {
 
 const LoanOfficerDashboard: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [loans, setLoans] = useState([]);
   const [stats, setStats] = useState<PortfolioStats>({
     total_clients: 0,
     active_loans: 0,
     total_disbursed: 0,
     pending_applications: 0
   });
-  const [openDialog, setOpenDialog] = useState(false);
-  const [newClient, setNewClient] = useState({
-    username: '',
-    email: '',
-    first_name: '',
-    last_name: '',
-    date_of_birth: '',
-    national_id: '',
-    address: '',
-    monthly_income: '',
-    employment_status: 'employed'
-  });
+  const [openClientDialog, setOpenClientDialog] = useState(false);
+  const [openLoanDialog, setOpenLoanDialog] = useState(false);
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<number | undefined>();
+  const [selectedLoan, setSelectedLoan] = useState<any>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchClients();
+    fetchLoans();
     fetchPortfolioStats();
   }, []);
 
@@ -58,6 +62,15 @@ const LoanOfficerDashboard: React.FC = () => {
       setClients(response.data);
     } catch (error) {
       console.error('Error fetching clients:', error);
+    }
+  };
+
+  const fetchLoans = async () => {
+    try {
+      const response = await api.get('/api/loans/loans/');
+      setLoans(response.data.results || response.data);
+    } catch (error) {
+      console.error('Error fetching loans:', error);
     }
   };
 
@@ -71,47 +84,38 @@ const LoanOfficerDashboard: React.FC = () => {
     }
   };
 
-  const handleCreateClient = async () => {
-    try {
-      await api.post('/api/auth/clients/', newClient);
-      setOpenDialog(false);
-      setNewClient({
-        username: '',
-        email: '',
-        first_name: '',
-        last_name: '',
-        date_of_birth: '',
-        national_id: '',
-        address: '',
-        monthly_income: '',
-        employment_status: 'employed'
-      });
-      fetchClients();
-      fetchPortfolioStats();
-    } catch (error) {
-      console.error('Error creating client:', error);
-    }
+  const handleClientSuccess = () => {
+    fetchClients();
+    fetchPortfolioStats();
   };
 
-  const StatCard = ({ title, value, icon, color = 'primary' }: any) => (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography color="textSecondary" gutterBottom>
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div" color={color}>
-              {typeof value === 'number' && title.includes('$') 
-                ? `$${value.toLocaleString()}` 
-                : value}
-            </Typography>
-          </Box>
-          {icon}
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  const handleLoanSuccess = () => {
+    fetchLoans();
+    fetchPortfolioStats();
+  };
+
+  const handlePaymentSuccess = () => {
+    fetchLoans();
+    fetchPortfolioStats();
+  };
+
+  const handleNewLoan = (clientId: number) => {
+    setSelectedClient(clientId);
+    setOpenLoanDialog(true);
+  };
+
+  const handleRecordPayment = (loan: any) => {
+    setSelectedLoan(loan);
+    setOpenPaymentDialog(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+
 
   const getEmploymentColor = (status: string) => {
     const colors: any = {
@@ -123,17 +127,35 @@ const LoanOfficerDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">My Portfolio</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpenDialog(true)}
-        >
-          Add New Client
-        </Button>
-      </Box>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <ResponsiveNavbar
+        title="KreditAI"
+        userRole="Loan Officer"
+        onLogout={handleLogout}
+      />
+      
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' }, 
+          gap: { xs: 2, sm: 0 },
+          mb: { xs: 3, md: 4 }
+        }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            {isMobile ? 'Portfolio' : 'My Portfolio'}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={!isMobile ? <Add /> : undefined}
+            onClick={() => setOpenClientDialog(true)}
+            fullWidth={isMobile}
+            sx={{ px: 3, py: 1.5 }}
+          >
+            {isMobile ? 'Add Client' : 'Add New Client'}
+          </Button>
+        </Box>
 
       {/* Portfolio Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -170,154 +192,123 @@ const LoanOfficerDashboard: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Clients Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Client ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Monthly Income</TableCell>
-              <TableCell>Employment</TableCell>
-              <TableCell>Loans</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell>{client.client_id}</TableCell>
-                <TableCell>{client.full_name}</TableCell>
-                <TableCell>{client.email}</TableCell>
-                <TableCell>${client.monthly_income?.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={client.employment_status.replace('_', ' ')} 
-                    color={getEmploymentColor(client.employment_status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{client.loan_count}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={client.is_active ? 'Active' : 'Inactive'}
-                    color={client.is_active ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small">
-                    <Edit />
-                  </IconButton>
-                  <Button size="small" variant="outlined">
-                    New Loan
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+        {/* Clients Table */}
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>My Clients</Typography>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1, border: '1px solid #e5e7eb' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Client ID</TableCell>
+                  <TableCell>Name</TableCell>
+                  {!isMobile && <TableCell>Email</TableCell>}
+                  <TableCell>Income</TableCell>
+                  {!isMobile && <TableCell>Employment</TableCell>}
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {clients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>{client.client_id}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>{client.full_name}</TableCell>
+                    {!isMobile && <TableCell sx={{ fontSize: '0.875rem' }}>{client.email}</TableCell>}
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>${client.monthly_income?.toLocaleString()}</TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <Chip 
+                          label={client.employment_status.replace('_', ' ')} 
+                          color={getEmploymentColor(client.employment_status)}
+                          size="small"
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <Button 
+                        size="small" 
+                        variant="contained"
+                        onClick={() => handleNewLoan(client.id)}
+                        sx={{ mr: 1 }}
+                      >
+                        {isMobile ? 'Loan' : 'New Loan'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-      {/* Create Client Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Add New Client</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Username"
-                value={newClient.username}
-                onChange={(e) => setNewClient({ ...newClient, username: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={newClient.email}
-                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={newClient.first_name}
-                onChange={(e) => setNewClient({ ...newClient, first_name: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={newClient.last_name}
-                onChange={(e) => setNewClient({ ...newClient, last_name: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date of Birth"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={newClient.date_of_birth}
-                onChange={(e) => setNewClient({ ...newClient, date_of_birth: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="National ID"
-                value={newClient.national_id}
-                onChange={(e) => setNewClient({ ...newClient, national_id: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Address"
-                multiline
-                rows={2}
-                value={newClient.address}
-                onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Monthly Income"
-                type="number"
-                value={newClient.monthly_income}
-                onChange={(e) => setNewClient({ ...newClient, monthly_income: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                label="Employment Status"
-                value={newClient.employment_status}
-                onChange={(e) => setNewClient({ ...newClient, employment_status: e.target.value })}
-              >
-                <MenuItem value="employed">Employed</MenuItem>
-                <MenuItem value="self_employed">Self Employed</MenuItem>
-                <MenuItem value="unemployed">Unemployed</MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateClient} variant="contained">
-            Add Client
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Active Loans Table */}
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Active Loans</Typography>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1, border: '1px solid #e5e7eb' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Loan ID</TableCell>
+                  <TableCell>Client</TableCell>
+                  <TableCell>Amount</TableCell>
+                  {!isMobile && <TableCell>Balance</TableCell>}
+                  <TableCell>Status</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loans.filter((loan: any) => ['active', 'disbursed'].includes(loan.status)).map((loan: any) => (
+                  <TableRow key={loan.id}>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>{loan.loan_id}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                      {loan.client?.user?.first_name} {loan.client?.user?.last_name}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>${loan.amount}</TableCell>
+                    {!isMobile && <TableCell sx={{ fontSize: '0.875rem' }}>${loan.outstanding_balance}</TableCell>}
+                    <TableCell>
+                      <Chip 
+                        label={loan.status.toUpperCase()} 
+                        color={loan.status === 'active' ? 'success' : 'info'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        startIcon={<Payment />}
+                        onClick={() => handleRecordPayment(loan)}
+                      >
+                        {isMobile ? 'Pay' : 'Payment'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+
+        {/* Dialogs */}
+        <QuickClientAdd
+          open={openClientDialog}
+          onClose={() => setOpenClientDialog(false)}
+          onSuccess={handleClientSuccess}
+        />
+
+        <LoanDisbursement
+          open={openLoanDialog}
+          onClose={() => setOpenLoanDialog(false)}
+          clientId={selectedClient}
+          onSuccess={handleLoanSuccess}
+        />
+
+        <RepaymentTracking
+          open={openPaymentDialog}
+          onClose={() => setOpenPaymentDialog(false)}
+          loan={selectedLoan}
+          onSuccess={handlePaymentSuccess}
+        />
+      </Box>
     </Box>
   );
 };

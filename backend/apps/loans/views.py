@@ -2,19 +2,19 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
+from decimal import Decimal
 from .models import LoanProduct, Loan, Payment, Transaction
 from .serializers import LoanProductSerializer, LoanApplicationSerializer, LoanSerializer, PaymentSerializer, TransactionSerializer
-from apps.accounts.permissions import IsLoanOfficer, IsClient, IsSameCompany, IsCompanyAdmin
+from apps.accounts.permissions import IsLoanOfficer, IsClient, IsSameCompany, IsCompanyAdmin, TenantIsolationMixin
+from .services import LoanCalculationService
 from .tasks import send_loan_notification
 
-class LoanProductViewSet(viewsets.ModelViewSet):
+class LoanProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     serializer_class = LoanProductSerializer
     permission_classes = [IsCompanyAdmin]
     
     def get_queryset(self):
-        if self.request.user.role == 'super_admin':
-            return LoanProduct.objects.all()
-        return LoanProduct.objects.filter(company=self.request.user.company)
+        return super().get_queryset()
     
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.company)
@@ -83,23 +83,21 @@ class LoanViewSet(viewsets.ModelViewSet):
         if not amount:
             return Response({'error': 'Amount is required'}, status=400)
         
-        # Create repayment transaction
-        Transaction.objects.create(
-            loan=loan,
-            amount=amount,
-            transaction_type='repayment',
-            processed_by=request.user,
-            notes=notes
-        )
+        try:
+            amount = Decimal(str(amount))
+            if amount <= 0:
+                return Response({'error': 'Amount must be positive'}, status=400)
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid amount format'}, status=400)
         
-        # Update loan balance
-        loan.outstanding_balance -= float(amount)
-        if loan.outstanding_balance <= 0:
-            loan.status = 'completed'
-            loan.outstanding_balance = 0
+        # Use calculation service for proper payment allocation
+        payment_result = LoanCalculationService.process_payment(loan, amount)
         
-        loan.save()
-        return Response({'status': 'payment_recorded', 'new_balance': loan.outstanding_balance})
+        return Response({
+            'status': 'payment_recorded',
+            'payment_breakdown': payment_result,
+            'new_balance': loan.outstanding_balance
+        })
 
 class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer

@@ -8,6 +8,10 @@ User = get_user_model()
 
 class JWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
+        # Skip authentication for login and register endpoints
+        if request.path in ['/api/auth/login/', '/api/auth/register/']:
+            return None
+            
         token = self.get_token_from_header(request)
         if not token:
             return None

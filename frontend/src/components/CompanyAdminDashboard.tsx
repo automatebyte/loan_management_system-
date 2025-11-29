@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Grid, Card, CardContent, Typography, Button, Table, TableBody,
+  Box, Grid, Typography, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch
+  TextField, useMediaQuery, useTheme
 } from '@mui/material';
 import { Edit, Add, Person, Block, CheckCircle } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import StatCard from './common/StatCard';
+import ResponsiveNavbar from './common/ResponsiveNavbar';
+import ResponsiveModal from './common/ResponsiveModal';
 
 interface LoanOfficer {
   id: number;
@@ -30,6 +34,9 @@ const CompanyAdminDashboard: React.FC = () => {
     phone: '',
     password: 'defaultpass123'
   });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLoanOfficers();
@@ -72,131 +79,173 @@ const CompanyAdminDashboard: React.FC = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, color = 'primary' }: any) => (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography color="textSecondary" gutterBottom>
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div" color={color}>
-              {value}
-            </Typography>
-          </Box>
-          {icon}
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   const activeOfficers = officers.filter(o => o.is_active).length;
   const inactiveOfficers = officers.filter(o => o.is_active === false).length;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Loan Officer Management</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpenDialog(true)}
-        >
-          Create New Loan Officer
-        </Button>
-      </Box>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <ResponsiveNavbar
+        title="KreditAI"
+        userRole="Company Admin"
+        onLogout={handleLogout}
+      />
+      
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' }, 
+          gap: { xs: 2, sm: 0 },
+          mb: { xs: 3, md: 4 }
+        }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            {isMobile ? 'Officers' : 'Loan Officer Management'}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={!isMobile ? <Add /> : undefined}
+            onClick={() => setOpenDialog(true)}
+            fullWidth={isMobile}
+            sx={{ px: 3, py: 1.5 }}
+          >
+            {isMobile ? 'Create Officer' : 'Create New Loan Officer'}
+          </Button>
+        </Box>
 
-      {/* Dashboard Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="Total Officers" 
-            value={officers.length} 
-            icon={<Person color="primary" />}
-          />
+        {/* Dashboard Stats */}
+        <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
+          <Grid item xs={6} sm={6} md={3}>
+            <StatCard 
+              title="Total Officers" 
+              value={officers.length} 
+              icon={<Person color="primary" />}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={3}>
+            <StatCard 
+              title="Active Officers" 
+              value={activeOfficers} 
+              color="success"
+              icon={<CheckCircle color="success" />}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={3}>
+            <StatCard 
+              title="Inactive Officers" 
+              value={inactiveOfficers} 
+              color="error"
+              icon={<Block color="error" />}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={3}>
+            <StatCard 
+              title="This Month" 
+              value={officers.filter(o => {
+                const joinDate = new Date(o.date_joined);
+                const thisMonth = new Date();
+                return joinDate.getMonth() === thisMonth.getMonth() && 
+                       joinDate.getFullYear() === thisMonth.getFullYear();
+              }).length}
+              color="info"
+              icon={<Add color="info" />}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="Active Officers" 
-            value={activeOfficers} 
-            color="success"
-            icon={<CheckCircle color="success" />}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="Inactive Officers" 
-            value={inactiveOfficers} 
-            color="error"
-            icon={<Block color="error" />}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="This Month" 
-            value={officers.filter(o => {
-              const joinDate = new Date(o.date_joined);
-              const thisMonth = new Date();
-              return joinDate.getMonth() === thisMonth.getMonth() && 
-                     joinDate.getFullYear() === thisMonth.getFullYear();
-            }).length}
-            color="info"
-            icon={<Add color="info" />}
-          />
-        </Grid>
-      </Grid>
 
-      {/* Loan Officers Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Joined</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {officers.map((officer) => (
-              <TableRow key={officer.id}>
-                <TableCell>{officer.full_name}</TableCell>
-                <TableCell>{officer.username}</TableCell>
-                <TableCell>{officer.email}</TableCell>
-                <TableCell>{officer.phone || 'N/A'}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={officer.is_active ? 'Active' : 'Inactive'}
-                    color={officer.is_active ? 'success' : 'error'}
-                  />
-                </TableCell>
-                <TableCell>
-                  {new Date(officer.date_joined).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small">
-                    <Edit />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => toggleOfficerStatus(officer.id, officer.is_active)}
-                  >
-                    {officer.is_active ? <Block /> : <CheckCircle />}
-                  </IconButton>
-                </TableCell>
+        {/* Loan Officers Table */}
+        <Box sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: { xs: 300, md: 650 } }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                {!isMobile && <TableCell>Username</TableCell>}
+                <TableCell>Email</TableCell>
+                {!isMobile && <TableCell>Phone</TableCell>}
+                <TableCell>Status</TableCell>
+                {!isMobile && <TableCell>Joined</TableCell>}
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {officers.map((officer) => (
+                <TableRow key={officer.id}>
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    {officer.full_name}
+                  </TableCell>
+                  {!isMobile && (
+                    <TableCell sx={{ fontSize: '0.875rem' }}>
+                      {officer.username}
+                    </TableCell>
+                  )}
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                    {officer.email}
+                  </TableCell>
+                  {!isMobile && (
+                    <TableCell sx={{ fontSize: '0.875rem' }}>
+                      {officer.phone || 'N/A'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <Chip 
+                      label={officer.is_active ? 'Active' : 'Inactive'}
+                      color={officer.is_active ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
+                  {!isMobile && (
+                    <TableCell sx={{ fontSize: '0.875rem' }}>
+                      {new Date(officer.date_joined).toLocaleDateString()}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <IconButton size="small" sx={{ minWidth: '40px', minHeight: '40px' }}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => toggleOfficerStatus(officer.id, officer.is_active)}
+                      sx={{ minWidth: '40px', minHeight: '40px' }}
+                    >
+                      {officer.is_active ? <Block /> : <CheckCircle />}
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
 
-      {/* Create Officer Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Create New Loan Officer</DialogTitle>
-        <DialogContent>
+        {/* Create Officer Modal */}
+        <ResponsiveModal
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          title="Create New Loan Officer"
+          maxWidth="md"
+          actions={
+            <>
+              <Button 
+                onClick={() => setOpenDialog(false)}
+                fullWidth={isMobile}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateOfficer} 
+                variant="contained"
+                fullWidth={isMobile}
+              >
+                Create Officer
+              </Button>
+            </>
+          }
+        >
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -249,14 +298,8 @@ const CompanyAdminDashboard: React.FC = () => {
               />
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateOfficer} variant="contained">
-            Create Officer
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </ResponsiveModal>
+      </Box>
     </Box>
   );
 };

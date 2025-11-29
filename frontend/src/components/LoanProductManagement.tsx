@@ -4,7 +4,7 @@ import {
   TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch
 } from '@mui/material';
-import { Edit, Add, Delete, Visibility } from '@mui/icons-material';
+import { Edit, Add } from '@mui/icons-material';
 import api from '../services/api';
 
 interface LoanProduct {

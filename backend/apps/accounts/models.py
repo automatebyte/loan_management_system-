@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from apps.common.models import BaseModel
 from apps.loans.utils import generate_client_id
+from apps.common.validators import validate_image_file, validate_document_file
 
 class User(AbstractUser):
     """Extended user model with company association"""
@@ -32,9 +33,28 @@ class Client(BaseModel):
         ('unemployed', 'Unemployed'),
     ])
     
-    # File uploads
-    identification_picture = models.ImageField(upload_to='client_ids/', null=True, blank=True)
+    # File uploads with security validation
+    identification_picture = models.ImageField(
+        upload_to='client_ids/', 
+        null=True, 
+        blank=True,
+        validators=[validate_image_file]
+    )
     collateral_pictures = models.JSONField(default=list, blank=True)
+    
+    # Additional KYC documents
+    proof_of_income = models.FileField(
+        upload_to='client_documents/',
+        null=True,
+        blank=True,
+        validators=[validate_document_file]
+    )
+    bank_statement = models.FileField(
+        upload_to='client_documents/',
+        null=True,
+        blank=True,
+        validators=[validate_document_file]
+    )
     loan_officer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_clients')
     
     def save(self, *args, **kwargs):
