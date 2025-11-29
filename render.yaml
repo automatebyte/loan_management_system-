@@ -2,7 +2,6 @@ services:
   - type: web
     name: kreditai-backend
     env: python
-    plan: free
     buildCommand: |
       cd backend &&
       pip install -r requirements.txt &&
@@ -28,7 +27,6 @@ services:
   - type: web
     name: kreditai-frontend
     env: static
-    plan: free
     buildCommand: |
       cd frontend &&
       npm ci &&
@@ -40,6 +38,5 @@ services:
 
 databases:
   - name: kreditai-postgres
-    plan: free
     databaseName: kreditai_db
     user: kreditai_user
