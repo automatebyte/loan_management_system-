@@ -34,6 +34,10 @@ const Login: React.FC = () => {
       
       if (response.data.user.role === 'super_admin') {
         navigate('/super-admin');
+      } else if (response.data.user.role === 'company_admin') {
+        navigate('/company-admin');
+      } else if (response.data.user.role === 'loan_officer') {
+        navigate('/loan-officer');
       } else if (response.data.user.role === 'client') {
         navigate('/client-portal');
       } else {
