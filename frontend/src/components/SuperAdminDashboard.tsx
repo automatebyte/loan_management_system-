@@ -9,6 +9,7 @@ import AddCompanyModal from './AddCompanyModal';
 import CompanyManagementTable from './CompanyManagementTable';
 import CompanyApprovalTable from './CompanyApprovalTable';
 import CompanyCredentialsModal from './CompanyCredentialsModal';
+import CredentialDisplay from './CredentialDisplay';
 import StatCard from './common/StatCard';
 import ResponsiveNavbar from './common/ResponsiveNavbar';
 
@@ -55,6 +56,7 @@ const SuperAdminDashboard: React.FC = () => {
   const [openCredentialsModal, setOpenCredentialsModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showCredentials, setShowCredentials] = useState<any>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
@@ -139,16 +141,16 @@ const SuperAdminDashboard: React.FC = () => {
       fetchCompanies();
       fetchDashboardData();
       
-      // Show credentials in alert if available
+      // Show credentials in dedicated component if available
       if (response.data.admin_password) {
-        const credentials = `Username: ${response.data.admin_username} | Password: ${response.data.admin_password}`;
-        setAlert({ 
-          type: 'success', 
-          message: `Company approved! Login credentials: ${credentials}` 
+        const company = companies.find(c => c.id === id);
+        setShowCredentials({
+          username: response.data.admin_username,
+          password: response.data.admin_password,
+          email: response.data.admin_email,
+          loginUrl: response.data.login_url,
+          companyName: company?.name || 'Company'
         });
-        
-        // Keep alert visible longer for credentials
-        setTimeout(() => setAlert(null), 10000);
         
         // Also log to console for easy copying
         console.log('Company Approved - Login Credentials:');
@@ -156,6 +158,9 @@ const SuperAdminDashboard: React.FC = () => {
         console.log('Password:', response.data.admin_password);
         console.log('Email:', response.data.admin_email);
         console.log('Login URL:', response.data.login_url);
+        
+        // Hide credentials after 30 seconds
+        setTimeout(() => setShowCredentials(null), 30000);
       } else {
         setAlert({ type: 'success', message: 'Company approved and activated!' });
         setTimeout(() => setAlert(null), 3000);
@@ -204,17 +209,21 @@ const SuperAdminDashboard: React.FC = () => {
       
       <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
       {alert && (
-        <Alert 
-          severity={alert.type} 
-          className="mb-4"
-          sx={{ 
-            fontFamily: 'monospace',
-            fontSize: alert.message.includes('credentials') ? '0.9rem' : '1rem',
-            wordBreak: 'break-all'
-          }}
-        >
+        <Alert severity={alert.type} className="mb-4">
           {alert.message}
         </Alert>
+      )}
+      
+      {showCredentials && (
+        <Box sx={{ mb: 3 }}>
+          <CredentialDisplay
+            username={showCredentials.username}
+            password={showCredentials.password}
+            email={showCredentials.email}
+            loginUrl={showCredentials.loginUrl}
+            companyName={showCredentials.companyName}
+          />
+        </Box>
       )}
       
         <Box sx={{ 
