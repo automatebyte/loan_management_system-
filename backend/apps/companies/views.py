@@ -28,6 +28,62 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return Company.objects.filter(id=self.request.user.company.id)
         return Company.objects.none()
     
+    @action(detail=True, methods=['get'], permission_classes=[IsSuperAdmin])
+    def credentials(self, request, pk=None):
+        """Get company admin credentials"""
+        company = self.get_object()
+        
+        admin_user = User.objects.filter(
+            company=company,
+            role='company_admin'
+        ).first()
+        
+        if not admin_user:
+            return Response({'error': 'No admin user found for this company'}, status=404)
+        
+        return Response({
+            'company_name': company.name,
+            'admin_username': admin_user.username,
+            'admin_email': admin_user.email,
+            'login_url': 'https://kreditai1.onrender.com/',
+            'last_login': admin_user.last_login,
+            'is_active': admin_user.is_active
+        })
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
+    def reset_password(self, request, pk=None):
+        """Reset company admin password"""
+        company = self.get_object()
+        
+        admin_user = User.objects.filter(
+            company=company,
+            role='company_admin'
+        ).first()
+        
+        if not admin_user:
+            return Response({'error': 'No admin user found for this company'}, status=404)
+        
+        # Generate new password
+        from apps.common.utils import generate_secure_password
+        new_password = generate_secure_password()
+        admin_user.set_password(new_password)
+        admin_user.save()
+        
+        # Send email with new credentials
+        from apps.common.email_service import send_welcome_email
+        send_welcome_email.delay(
+            user_email=admin_user.email,
+            user_name=company.admin_name,
+            company_name=company.name,
+            temp_password=new_password
+        )
+        
+        return Response({
+            'status': 'password_reset',
+            'new_password': new_password,
+            'email_sent': True
+        })
+    
     @action(detail=False, methods=['get'], permission_classes=[IsSuperAdmin])
     def dashboard_stats(self, request):
         """Super Admin dashboard statistics with enhanced security"""
@@ -129,21 +185,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Company is not pending approval'}, status=400)
         
         try:
-            # Create company admin user
-            admin_user = User.objects.create_user(
-                username=company.admin_email,
-                email=company.admin_email,
-                first_name=company.admin_name.split()[0] if company.admin_name else '',
-                last_name=' '.join(company.admin_name.split()[1:]) if len(company.admin_name.split()) > 1 else '',
-                role='company_admin',
-                company=company,
-                is_active=True
-            )
-            
-            # Set temporary password (should be sent via email)
-            temp_password = f"KreditAI{company.id}!"
-            admin_user.set_password(temp_password)
-            admin_user.save()
+            # Create company admin user with secure credentials
+            from apps.common.utils import create_company_admin
+            admin_user, temp_password = create_company_admin(company)
             
             # Activate company
             company.subscription_status = 'trial'  # Start with trial
@@ -164,6 +208,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return Response({
                 'status': 'approved',
                 'admin_username': admin_user.username,
+                'admin_password': temp_password,  # Include password in response
                 'trial_expires': company.subscription_expiry
             })
             

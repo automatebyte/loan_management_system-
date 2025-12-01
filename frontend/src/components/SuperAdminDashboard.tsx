@@ -8,6 +8,7 @@ import api from '../services/api';
 import AddCompanyModal from './AddCompanyModal';
 import CompanyManagementTable from './CompanyManagementTable';
 import CompanyApprovalTable from './CompanyApprovalTable';
+import CompanyCredentialsModal from './CompanyCredentialsModal';
 import StatCard from './common/StatCard';
 import ResponsiveNavbar from './common/ResponsiveNavbar';
 
@@ -51,6 +52,8 @@ const SuperAdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [openModal, setOpenModal] = useState(false);
+  const [openCredentialsModal, setOpenCredentialsModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -156,6 +159,11 @@ const SuperAdminDashboard: React.FC = () => {
       setAlert({ type: 'error', message: 'Failed to reject company' });
       setTimeout(() => setAlert(null), 3000);
     }
+  };
+
+  const handleViewCredentials = (company: Company) => {
+    setSelectedCompany(company);
+    setOpenCredentialsModal(true);
   };
 
 
@@ -327,6 +335,7 @@ const SuperAdminDashboard: React.FC = () => {
           onUpdatePayment={handleUpdatePayment}
           onSuspendService={handleSuspendService}
           onActivateService={handleActivateService}
+          onViewCredentials={handleViewCredentials}
         />
         </Box>
 
@@ -335,6 +344,13 @@ const SuperAdminDashboard: React.FC = () => {
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSubmit={handleCreateCompany}
+      />
+
+      {/* Company Credentials Modal */}
+      <CompanyCredentialsModal
+        open={openCredentialsModal}
+        onClose={() => setOpenCredentialsModal(false)}
+        company={selectedCompany}
       />
       </Box>
     </Box>

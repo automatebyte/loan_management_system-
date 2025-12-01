@@ -31,13 +31,15 @@ interface CompanyManagementTableProps {
   onUpdatePayment: (id: number) => void;
   onSuspendService: (id: number) => void;
   onActivateService: (id: number) => void;
+  onViewCredentials: (company: Company) => void;
 }
 
 const CompanyManagementTable: React.FC<CompanyManagementTableProps> = ({
   companies,
   onUpdatePayment,
   onSuspendService,
-  onActivateService
+  onActivateService,
+  onViewCredentials
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -196,9 +198,9 @@ const CompanyManagementTable: React.FC<CompanyManagementTableProps> = ({
             Activate Service
           </MenuItem>
         )}
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={() => { onViewCredentials(selectedCompany!); handleMenuClose(); }}>
           <Visibility className="mr-2" fontSize="small" />
-          View Details
+          View Login Credentials
         </MenuItem>
       </Menu>
     </>
