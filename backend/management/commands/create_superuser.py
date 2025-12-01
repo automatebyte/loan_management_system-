@@ -5,11 +5,16 @@ import os
 class Command(BaseCommand):
     help = 'Create super admin user for production'
     
+    def add_arguments(self, parser):
+        parser.add_argument('--username', type=str, default='DonMeli')
+        parser.add_argument('--email', type=str, default='mellinovation@gmail.com')
+        parser.add_argument('--password', type=str, default='Don#Meli10.')
+    
     def handle(self, *args, **options):
         User = get_user_model()
-        username = os.getenv('SUPER_ADMIN_USERNAME', 'DonMeli')
-        email = os.getenv('SUPER_ADMIN_EMAIL', 'mellinovation@gmail.com')
-        password = os.getenv('SUPER_ADMIN_PASSWORD', 'Don#Meli10.')
+        username = options['username']
+        email = options['email']
+        password = options['password']
         
         if not User.objects.filter(username=username).exists():
             superuser = User.objects.create_superuser(
