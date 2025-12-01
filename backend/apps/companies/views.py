@@ -39,15 +39,31 @@ class CompanyViewSet(viewsets.ModelViewSet):
         ).first()
         
         if not admin_user:
-            return Response({'error': 'No admin user found for this company'}, status=404)
+            # Try to create admin user if missing
+            try:
+                from apps.common.utils import create_company_admin
+                admin_user, temp_password = create_company_admin(company)
+                return Response({
+                    'company_name': company.name,
+                    'admin_username': admin_user.username,
+                    'admin_email': admin_user.email,
+                    'login_url': 'https://kreditai.onrender.com/login',
+                    'last_login': admin_user.last_login,
+                    'is_active': admin_user.is_active,
+                    'temp_password': temp_password,
+                    'message': 'Admin user was missing and has been created'
+                })
+            except Exception as e:
+                return Response({'error': f'No admin user found and failed to create: {e}'}, status=404)
         
         return Response({
             'company_name': company.name,
             'admin_username': admin_user.username,
             'admin_email': admin_user.email,
-            'login_url': 'https://kreditai1.onrender.com/',
+            'login_url': 'https://kreditai.onrender.com/login',
             'last_login': admin_user.last_login,
-            'is_active': admin_user.is_active
+            'is_active': admin_user.is_active,
+            'message': 'Use reset password to get new credentials if needed'
         })
     
     @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
@@ -61,27 +77,43 @@ class CompanyViewSet(viewsets.ModelViewSet):
         ).first()
         
         if not admin_user:
-            return Response({'error': 'No admin user found for this company'}, status=404)
+            # Create admin user if missing
+            try:
+                from apps.common.utils import create_company_admin
+                admin_user, new_password = create_company_admin(company)
+            except Exception as e:
+                return Response({'error': f'No admin user found and failed to create: {e}'}, status=404)
+        else:
+            # Generate new password for existing user
+            from apps.common.utils import generate_secure_password
+            new_password = generate_secure_password()
+            admin_user.set_password(new_password)
+            admin_user.save()
         
-        # Generate new password
-        from apps.common.utils import generate_secure_password
-        new_password = generate_secure_password()
-        admin_user.set_password(new_password)
-        admin_user.save()
-        
-        # Send email with new credentials
-        from apps.common.email_service import send_welcome_email
-        send_welcome_email.delay(
-            user_email=admin_user.email,
-            user_name=company.admin_name,
-            company_name=company.name,
-            temp_password=new_password
-        )
+        # Try to send email with new credentials (don't fail if email fails)
+        email_sent = False
+        try:
+            from apps.common.email_service import send_welcome_email
+            send_welcome_email.delay(
+                user_email=admin_user.email,
+                user_name=company.admin_name,
+                company_name=company.name,
+                temp_password=new_password
+            )
+            email_sent = True
+        except Exception as email_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Email failed for password reset {company.name}: {email_error}")
         
         return Response({
             'status': 'password_reset',
+            'admin_username': admin_user.username,
+            'admin_email': admin_user.email,
             'new_password': new_password,
-            'email_sent': True
+            'login_url': 'https://kreditai.onrender.com/login',
+            'email_sent': email_sent,
+            'message': f'Password reset! New credentials: {admin_user.username} / {new_password}'
         })
     
     @action(detail=False, methods=['get'], permission_classes=[IsSuperAdmin])
@@ -196,23 +228,38 @@ class CompanyViewSet(viewsets.ModelViewSet):
             company.subscription_expiry = date.today() + timedelta(days=14)  # 14-day trial
             company.save()
             
-            # Send welcome email
-            from apps.common.email_service import send_welcome_email
-            send_welcome_email.delay(
-                user_email=admin_user.email,
-                user_name=company.admin_name,
-                company_name=company.name,
-                temp_password=temp_password
-            )
+            # Try to send welcome email (don't fail if email fails)
+            email_sent = False
+            try:
+                from apps.common.email_service import send_welcome_email
+                send_welcome_email.delay(
+                    user_email=admin_user.email,
+                    user_name=company.admin_name,
+                    company_name=company.name,
+                    temp_password=temp_password
+                )
+                email_sent = True
+            except Exception as email_error:
+                # Log email error but don't fail the approval
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Email failed for company {company.name}: {email_error}")
             
             return Response({
                 'status': 'approved',
                 'admin_username': admin_user.username,
-                'admin_password': temp_password,  # Include password in response
-                'trial_expires': company.subscription_expiry
+                'admin_email': admin_user.email,
+                'admin_password': temp_password,  # Always include password in response
+                'login_url': 'https://kreditai.onrender.com/login',
+                'trial_expires': company.subscription_expiry,
+                'email_sent': email_sent,
+                'message': f'Company approved! Admin credentials: {admin_user.username} / {temp_password}'
             })
             
         except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Company approval failed for {company.name}: {e}")
             return Response({'error': str(e)}, status=400)
     
     @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
@@ -269,10 +316,16 @@ def company_registration(request):
         company.monthly_fee = plan_fees.get(data['subscription_plan'], 299.00)
         company.save()
         
+        # Log registration for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Company registered: {company.name} ({company.admin_email}) - ID: {company.id}")
+        
         return Response({
             'message': 'Registration submitted successfully',
             'company_id': company.id,
-            'status': 'pending_approval'
+            'status': 'pending_approval',
+            'next_steps': 'Your registration is pending approval. You will receive login credentials via email once approved.'
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:

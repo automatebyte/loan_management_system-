@@ -135,11 +135,31 @@ const SuperAdminDashboard: React.FC = () => {
 
   const handleApproveCompany = async (id: number) => {
     try {
-      await api.post(`/api/companies/${id}/approve/`);
+      const response = await api.post(`/api/companies/${id}/approve/`);
       fetchCompanies();
       fetchDashboardData();
-      setAlert({ type: 'success', message: 'Company approved and activated!' });
-      setTimeout(() => setAlert(null), 3000);
+      
+      // Show credentials in alert if available
+      if (response.data.admin_password) {
+        const credentials = `Username: ${response.data.admin_username} | Password: ${response.data.admin_password}`;
+        setAlert({ 
+          type: 'success', 
+          message: `Company approved! Login credentials: ${credentials}` 
+        });
+        
+        // Keep alert visible longer for credentials
+        setTimeout(() => setAlert(null), 10000);
+        
+        // Also log to console for easy copying
+        console.log('Company Approved - Login Credentials:');
+        console.log('Username:', response.data.admin_username);
+        console.log('Password:', response.data.admin_password);
+        console.log('Email:', response.data.admin_email);
+        console.log('Login URL:', response.data.login_url);
+      } else {
+        setAlert({ type: 'success', message: 'Company approved and activated!' });
+        setTimeout(() => setAlert(null), 3000);
+      }
     } catch (error) {
       console.error('Error approving company:', error);
       setAlert({ type: 'error', message: 'Failed to approve company' });
@@ -184,7 +204,15 @@ const SuperAdminDashboard: React.FC = () => {
       
       <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
       {alert && (
-        <Alert severity={alert.type} className="mb-4">
+        <Alert 
+          severity={alert.type} 
+          className="mb-4"
+          sx={{ 
+            fontFamily: 'monospace',
+            fontSize: alert.message.includes('credentials') ? '0.9rem' : '1rem',
+            wordBreak: 'break-all'
+          }}
+        >
           {alert.message}
         </Alert>
       )}
