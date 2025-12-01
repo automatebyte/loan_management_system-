@@ -100,9 +100,19 @@ class LoanOfficerViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """Assign new loan officer to current user's company"""
-        serializer.save(
+        officer = serializer.save(
             company=self.request.user.company,
             role='loan_officer'
+        )
+        
+        # Send credentials email to new loan officer
+        from apps.common.email_service import send_loan_officer_credentials
+        temp_password = self.request.data.get('password', 'defaultpass123')
+        send_loan_officer_credentials.delay(
+            user_email=officer.email,
+            user_name=officer.get_full_name(),
+            company_name=self.request.user.company.name,
+            temp_password=temp_password
         )
     
     @action(detail=True, methods=['post'])
