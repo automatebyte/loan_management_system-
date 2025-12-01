@@ -8,6 +8,7 @@ import SuperAdminDashboard from './components/SuperAdminDashboard';
 import CompanyAdminDashboard from './components/CompanyAdminDashboard';
 import LoanOfficerDashboard from './components/LoanOfficerDashboard';
 import ClientPortal from './components/ClientPortal';
+import AuthDebug from './components/AuthDebug';
 
 const theme = createTheme({
   palette: {
@@ -142,6 +143,7 @@ function App() {
           <Route path="/company-admin" element={<CompanyAdminDashboard />} />
           <Route path="/loan-officer" element={<LoanOfficerDashboard />} />
           <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/debug" element={<AuthDebug />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { Add, Business, TrendingUp, Warning, AttachMoney } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import api, { companyAPI } from '../services/api';
 import AddCompanyModal from './AddCompanyModal';
 import CompanyManagementTable from './CompanyManagementTable';
 import CompanyApprovalTable from './CompanyApprovalTable';
@@ -57,6 +57,7 @@ const SuperAdminDashboard: React.FC = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCredentials, setShowCredentials] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
@@ -68,76 +69,98 @@ const SuperAdminDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await api.get('/api/companies/dashboard_stats/');
+      const response = await companyAPI.getDashboardStats();
       setStats(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
+      if (error.response?.status === 403) {
+        setAlert({ type: 'error', message: 'Access denied. Please check your permissions.' });
+        setTimeout(() => setAlert(null), 5000);
+      }
     }
   };
 
   const fetchCompanies = async () => {
     try {
-      const response = await api.get('/api/companies/');
+      const response = await companyAPI.getCompanies();
       setCompanies(response.data.results || response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching companies:', error);
+      if (error.response?.status === 403) {
+        setAlert({ type: 'error', message: 'Access denied. Please check your permissions.' });
+        setTimeout(() => setAlert(null), 5000);
+      }
     }
   };
 
   const handleCreateCompany = async (companyData: any) => {
     try {
-      await api.post('/api/companies/', companyData);
+      await companyAPI.createCompany(companyData);
       setOpenModal(false);
       fetchCompanies();
       fetchDashboardData();
       setAlert({ type: 'success', message: 'Company registered successfully!' });
       setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating company:', error);
-      setAlert({ type: 'error', message: 'Failed to register company. Please try again.' });
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to register company';
+      setAlert({ type: 'error', message: errorMessage });
       setTimeout(() => setAlert(null), 3000);
     }
   };
 
   const handleUpdatePayment = async (id: number) => {
     try {
-      await api.post(`/api/companies/${id}/update_payment_status/`);
+      await companyAPI.updatePaymentStatus(id);
       fetchCompanies();
       fetchDashboardData();
       setAlert({ type: 'success', message: 'Payment status updated successfully!' });
       setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating payment:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to update payment';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 3000);
     }
   };
 
   const handleSuspendService = async (id: number) => {
     try {
-      await api.post(`/api/companies/${id}/suspend_service/`);
+      await companyAPI.suspendService(id);
       fetchCompanies();
       fetchDashboardData();
       setAlert({ type: 'success', message: 'Service suspended successfully!' });
       setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error suspending service:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to suspend service';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 3000);
     }
   };
 
   const handleActivateService = async (id: number) => {
     try {
-      await api.post(`/api/companies/${id}/activate_service/`);
+      await companyAPI.activateService(id);
       fetchCompanies();
       fetchDashboardData();
       setAlert({ type: 'success', message: 'Service activated successfully!' });
       setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error activating service:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to activate service';
+      setAlert({ type: 'error', message: errorMessage });
+      setTimeout(() => setAlert(null), 3000);
     }
   };
 
   const handleApproveCompany = async (id: number) => {
     try {
-      const response = await api.post(`/api/companies/${id}/approve/`);
+      console.log(`Attempting to approve company ID: ${id}`);
+      const response = await companyAPI.approveCompany(id);
+      
+      console.log('Approval response:', response.data);
+      
       fetchCompanies();
       fetchDashboardData();
       
@@ -165,23 +188,37 @@ const SuperAdminDashboard: React.FC = () => {
         setAlert({ type: 'success', message: 'Company approved and activated!' });
         setTimeout(() => setAlert(null), 3000);
       }
-    } catch (error) {
-      console.error('Error approving company:', error);
-      setAlert({ type: 'error', message: 'Failed to approve company' });
-      setTimeout(() => setAlert(null), 3000);
+    } catch (error: any) {
+      console.error('Error approving company:', {
+        id,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Failed to approve company';
+      
+      setAlert({ type: 'error', message: `Approval failed: ${errorMessage}` });
+      setTimeout(() => setAlert(null), 5000);
     }
   };
 
   const handleRejectCompany = async (id: number) => {
     try {
-      await api.post(`/api/companies/${id}/reject/`);
+      await companyAPI.rejectCompany(id);
       fetchCompanies();
       fetchDashboardData();
       setAlert({ type: 'success', message: 'Company registration rejected' });
       setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rejecting company:', error);
-      setAlert({ type: 'error', message: 'Failed to reject company' });
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to reject company';
+      setAlert({ type: 'error', message: errorMessage });
       setTimeout(() => setAlert(null), 3000);
     }
   };
@@ -225,6 +262,26 @@ const SuperAdminDashboard: React.FC = () => {
           />
         </Box>
       )}
+      
+      {/* Debug Section */}
+      <Box sx={{ mb: 2 }}>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          onClick={() => setShowDebug(!showDebug)}
+          sx={{ mb: 1 }}
+        >
+          {showDebug ? 'Hide' : 'Show'} Debug Info
+        </Button>
+        {showDebug && (
+          <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+            <Typography variant="body2"><strong>Token:</strong> {localStorage.getItem('token') ? '✅ Present' : '❌ Missing'}</Typography>
+            <Typography variant="body2"><strong>User:</strong> {localStorage.getItem('user') || '❌ Missing'}</Typography>
+            <Typography variant="body2"><strong>API URL:</strong> {process.env.REACT_APP_API_URL || 'http://localhost:8000'}</Typography>
+            <Typography variant="body2"><strong>Current URL:</strong> {window.location.href}</Typography>
+          </Box>
+        )}
+      </Box>
       
         <Box sx={{ 
           display: 'flex', 
