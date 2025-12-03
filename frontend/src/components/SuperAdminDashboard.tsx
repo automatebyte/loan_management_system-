@@ -164,28 +164,29 @@ const SuperAdminDashboard: React.FC = () => {
       fetchCompanies();
       fetchDashboardData();
       
-      // Show credentials in dedicated component if available
-      if (response.data.admin_password) {
+      // Handle simplified response format
+      if (response.data.success && response.data.credentials) {
         const company = companies.find(c => c.id === id);
+        const { username, password, login_url } = response.data.credentials;
+        
         setShowCredentials({
-          username: response.data.admin_username,
-          password: response.data.admin_password,
-          email: response.data.admin_email,
-          loginUrl: response.data.login_url,
+          username,
+          password,
+          email: company?.admin_email || '',
+          loginUrl: login_url,
           companyName: company?.name || 'Company'
         });
         
-        // Also log to console for easy copying
+        // Log credentials for easy copying
         console.log('Company Approved - Login Credentials:');
-        console.log('Username:', response.data.admin_username);
-        console.log('Password:', response.data.admin_password);
-        console.log('Email:', response.data.admin_email);
-        console.log('Login URL:', response.data.login_url);
+        console.log('Username:', username);
+        console.log('Password:', password);
+        console.log('Login URL:', login_url);
         
         // Hide credentials after 30 seconds
         setTimeout(() => setShowCredentials(null), 30000);
       } else {
-        setAlert({ type: 'success', message: 'Company approved and activated!' });
+        setAlert({ type: 'success', message: response.data.message || 'Company approved!' });
         setTimeout(() => setAlert(null), 3000);
       }
     } catch (error: any) {
@@ -198,7 +199,6 @@ const SuperAdminDashboard: React.FC = () => {
       });
       
       const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.detail || 
                           error.response?.data?.message || 
                           error.message || 
                           'Failed to approve company';

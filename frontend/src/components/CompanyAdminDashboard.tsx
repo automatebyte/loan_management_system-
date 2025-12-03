@@ -45,7 +45,7 @@ const CompanyAdminDashboard: React.FC = () => {
   const fetchLoanOfficers = async () => {
     try {
       const response = await api.get('/api/auth/loan-officers/');
-      setOfficers(response.data.results || response.data);
+      setOfficers(response.data);
     } catch (error) {
       console.error('Error fetching loan officers:', error);
     }
@@ -53,7 +53,12 @@ const CompanyAdminDashboard: React.FC = () => {
 
   const handleCreateOfficer = async () => {
     try {
-      await api.post('/api/auth/loan-officers/', newOfficer);
+      const response = await api.post('/api/auth/create-loan-officer/', {
+        first_name: newOfficer.first_name,
+        last_name: newOfficer.last_name,
+        email: newOfficer.email
+      });
+      
       setOpenDialog(false);
       setNewOfficer({
         username: '',
@@ -64,8 +69,20 @@ const CompanyAdminDashboard: React.FC = () => {
         password: 'defaultpass123'
       });
       fetchLoanOfficers();
-    } catch (error) {
+      
+      // Show credentials
+      if (response.data.success && response.data.credentials) {
+        const { username, password, email } = response.data.credentials;
+        alert(`Loan Officer Created!\n\nUsername: ${username}\nPassword: ${password}\nEmail: ${email}\n\nPlease save these credentials.`);
+        
+        console.log('Loan Officer Created:');
+        console.log('Username:', username);
+        console.log('Password:', password);
+        console.log('Email:', email);
+      }
+    } catch (error: any) {
       console.error('Error creating loan officer:', error);
+      alert(`Error: ${error.response?.data?.error || 'Failed to create loan officer'}`);
     }
   };
 

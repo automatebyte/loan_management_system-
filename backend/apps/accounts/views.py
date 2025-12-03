@@ -1,168 +1,114 @@
-import jwt
-from datetime import datetime, timedelta
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes, action
-from rest_framework.permissions import AllowAny
+from rest_framework import viewsets, status
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from .serializers import (
-    UserRegistrationSerializer, LoginSerializer, UserSerializer, 
-    ClientSerializer, LoanOfficerSerializer, ClientCreateSerializer
-)
-from .models import Client, User
-from .permissions import IsClient, IsCompanyAdmin, IsSameCompany, IsLoanOfficer
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.models import AnonymousUser
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import User
+from .serializers import UserSerializer
+from .permissions import IsCompanyAdmin, IsSuperAdmin
+
+User = get_user_model()
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-def register(request):
-    serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@permission_classes([IsAuthenticated])
+def create_loan_officer(request):
+    """Create loan officer - Company Admin only"""
+    if request.user.role != 'company_admin':
+        return Response({'error': 'Only company admins can create loan officers'}, status=403)
+    
+    try:
+        data = request.data
+        company = request.user.company
+        
+        # Simple username and password
+        username = f"{data['first_name'].lower()}_{company.id}"
+        password = "Officer123!"
+        
+        # Create loan officer
+        user = User.objects.create(
+            username=username,
+            email=data['email'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            role='loan_officer',
+            company=company,
+            is_active=True
+        )
+        user.set_password(password)
+        user.save()
+        
+        # TODO: Re-enable email after core flows stable
+        # send_officer_credentials_email(user, password)
+        
+        return Response({
+            'success': True,
+            'message': 'Loan officer created successfully',
+            'credentials': {
+                'username': username,
+                'password': password,
+                'email': data['email']
+            }
+        }, status=201)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
-from django.http import JsonResponse
-from django.contrib.auth import authenticate
-import json
-
-@csrf_exempt
-def test_endpoint(request):
-    return JsonResponse({'status': 'ok', 'message': 'API is working'})
-
-@csrf_exempt  
+@api_view(['POST'])
 def login(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            password = data.get('password')
-            
-            user = authenticate(username=username, password=password)
-            if user:
-                payload = {
-                    'user_id': user.id,
-                    'exp': datetime.utcnow() + timedelta(hours=24),
-                    'iat': datetime.utcnow()
-                }
-                
-                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-                
-                return JsonResponse({
-                    'token': token,
-                    'user': {
-                        'id': user.id,
-                        'username': user.username,
-                        'email': user.email,
-                        'role': getattr(user, 'role', 'client'),
-                        'company': getattr(user, 'company_id', None)
-                    }
-                })
-            else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
+    """Simple login endpoint"""
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response({'error': 'Username and password required'}, status=400)
+    
+    user = authenticate(username=username, password=password)
+    
+    if user:
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'token': str(refresh.access_token),
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'first_name': user.first_name,
+                'last_name': user.last_name
+            }
+        })
+    else:
+        return Response({'error': 'Invalid credentials'}, status=400)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def profile(request):
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data)
+    """Get user profile"""
+    return Response({
+        'id': request.user.id,
+        'username': request.user.username,
+        'email': request.user.email,
+        'role': request.user.role,
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'company': request.user.company.name if request.user.company else None
+    })
 
-@api_view(['POST'])
-@permission_classes([IsClient])
-def create_client_profile(request):
-    if hasattr(request.user, 'client'):
-        return Response({'error': 'Client profile already exists'}, status=400)
-    
-    data = request.data.copy()
-    data['user'] = request.user.id
-    data['company'] = request.user.company.id
-    
-    serializer = ClientSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
-
-class LoanOfficerViewSet(viewsets.ModelViewSet):
-    serializer_class = LoanOfficerSerializer
-    permission_classes = [IsCompanyAdmin]
-    
-    def get_queryset(self):
-        """Company Admin can only see loan officers in their company"""
-        if self.request.user.role == 'super_admin':
-            return User.objects.filter(role='loan_officer')
-        return User.objects.filter(
-            company=self.request.user.company,
-            role='loan_officer'
-        )
-    
-    def perform_create(self, serializer):
-        """Assign new loan officer to current user's company"""
-        officer = serializer.save(
-            company=self.request.user.company,
-            role='loan_officer'
-        )
-        
-        # Send credentials email to new loan officer
-        from apps.common.email_service import send_loan_officer_credentials
-        temp_password = self.request.data.get('password', 'defaultpass123')
-        send_loan_officer_credentials.delay(
-            user_email=officer.email,
-            user_name=officer.get_full_name(),
-            company_name=self.request.user.company.name,
-            temp_password=temp_password
-        )
-    
-    @action(detail=True, methods=['post'])
-    def deactivate(self, request, pk=None):
-        """Deactivate a loan officer"""
-        officer = self.get_object()
-        officer.is_active = False
-        officer.save()
-        return Response({'status': 'deactivated'})
-    
-    @action(detail=True, methods=['post'])
-    def activate(self, request, pk=None):
-        """Activate a loan officer"""
-        officer = self.get_object()
-        officer.is_active = True
-        officer.save()
-        return Response({'status': 'activated'})
-
-class ClientViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsLoanOfficer]
-    
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return ClientCreateSerializer
-        return ClientSerializer
-    
-    def get_queryset(self):
-        """Loan officers can only see clients in their company"""
-        if self.request.user.role == 'super_admin':
-            return Client.objects.all()
-        return Client.objects.filter(company=self.request.user.company)
-    
-    def perform_create(self, serializer):
-        """Assign new client to current user's company and loan officer"""
-        serializer.save(
-            company=self.request.user.company,
-            loan_officer=self.request.user
-        )
-    
-    @action(detail=False, methods=['get'])
-    def my_clients(self, request):
-        """Get clients assigned to current loan officer"""
-        clients = Client.objects.filter(loan_officer=request.user)
-        serializer = self.get_serializer(clients, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def assign_to_me(self, request, pk=None):
-        """Assign client to current loan officer"""
-        client = self.get_object()
-        client.loan_officer = request.user
-        client.save()
-        return Response({'status': 'assigned'})
+@api_view(['GET'])
+@permission_classes([IsCompanyAdmin])
+def loan_officers(request):
+    """Get loan officers for company admin"""
+    officers = User.objects.filter(
+        company=request.user.company,
+        role='loan_officer'
+    )
+    return Response([{
+        'id': officer.id,
+        'username': officer.username,
+        'email': officer.email,
+        'first_name': officer.first_name,
+        'last_name': officer.last_name,
+        'is_active': officer.is_active
+    } for officer in officers])

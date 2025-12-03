@@ -7,10 +7,9 @@ router.register(r'loan-officers', views.LoanOfficerViewSet, basename='loan-offic
 router.register(r'clients', views.ClientViewSet, basename='client')
 
 urlpatterns = [
-    path('test/', views.test_endpoint, name='test'),
-    path('register/', views.register, name='register'),
     path('login/', views.login, name='login'),
     path('profile/', views.profile, name='profile'),
-    path('client-profile/', views.create_client_profile, name='create_client_profile'),
+    path('create-loan-officer/', views.create_loan_officer, name='create_loan_officer'),
+    path('loan-officers/', views.loan_officers, name='loan_officers'),
     path('', include(router.urls)),
 ]

@@ -6,6 +6,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import date, timedelta
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from .models import Company
 from .serializers import CompanySerializer, CompanyCreateSerializer
 from apps.accounts.permissions import IsSuperAdmin, IsCompanyAdmin
@@ -211,56 +212,68 @@ class CompanyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
     def approve(self, request, pk=None):
         """Approve company registration and create admin user"""
-        company = self.get_object()
-        
-        if company.subscription_status != 'pending_approval':
-            return Response({'error': 'Company is not pending approval'}, status=400)
-        
         try:
-            # Create company admin user with secure credentials
-            from apps.common.utils import create_company_admin
-            admin_user, temp_password = create_company_admin(company)
+            company = self.get_object()
             
-            # Activate company
-            company.subscription_status = 'trial'  # Start with trial
+            # Simple approval - allow re-approval
+            if company.subscription_status == 'trial':
+                # Already approved, just return existing credentials
+                admin_user = User.objects.filter(company=company, role='company_admin').first()
+                if admin_user:
+                    return Response({
+                        'success': True,
+                        'message': 'Company already approved',
+                        'credentials': {
+                            'username': admin_user.username,
+                            'password': 'Use reset password to get new credentials',
+                            'login_url': 'https://kreditai.onrender.com/login'
+                        }
+                    })
+            
+            # Create simple username and password
+            username = f"{company.name.lower().replace(' ', '_')}_admin"
+            password = "Welcome123!"
+            
+            # Create or get admin user
+            admin_user, created = User.objects.get_or_create(
+                email=company.admin_email,
+                defaults={
+                    'username': username,
+                    'role': 'company_admin',
+                    'company': company,
+                    'first_name': company.admin_name.split()[0] if company.admin_name else 'Admin',
+                    'last_name': ' '.join(company.admin_name.split()[1:]) if company.admin_name and len(company.admin_name.split()) > 1 else '',
+                    'is_active': True
+                }
+            )
+            
+            if created or True:  # Always reset password
+                admin_user.set_password(password)
+                admin_user.save()
+            
+            # Update company status
+            company.subscription_status = 'trial'
             company.is_active = True
-            from datetime import date, timedelta
-            company.subscription_expiry = date.today() + timedelta(days=14)  # 14-day trial
+            company.subscription_expiry = date.today() + timedelta(days=14)
             company.save()
             
-            # Try to send welcome email (don't fail if email fails)
-            email_sent = False
-            try:
-                from apps.common.email_service import send_welcome_email
-                send_welcome_email.delay(
-                    user_email=admin_user.email,
-                    user_name=company.admin_name,
-                    company_name=company.name,
-                    temp_password=temp_password
-                )
-                email_sent = True
-            except Exception as email_error:
-                # Log email error but don't fail the approval
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"Email failed for company {company.name}: {email_error}")
+            # TODO: Re-enable email after core flows stable
+            # send_credentials_email(admin_user, password)
             
             return Response({
-                'status': 'approved',
-                'admin_username': admin_user.username,
-                'admin_email': admin_user.email,
-                'admin_password': temp_password,  # Always include password in response
-                'login_url': 'https://kreditai.onrender.com/login',
-                'trial_expires': company.subscription_expiry,
-                'email_sent': email_sent,
-                'message': f'Company approved! Admin credentials: {admin_user.username} / {temp_password}'
-            })
+                'success': True,
+                'message': 'Company approved successfully',
+                'credentials': {
+                    'username': username,
+                    'password': password,
+                    'login_url': 'https://kreditai.onrender.com/login'
+                }
+            }, status=200)
             
+        except Company.DoesNotExist:
+            return Response({'error': 'Company not found'}, status=404)
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Company approval failed for {company.name}: {e}")
-            return Response({'error': str(e)}, status=400)
+            return Response({'error': str(e)}, status=500)
     
     @action(detail=True, methods=['post'], permission_classes=[IsSuperAdmin])
     def reject(self, request, pk=None):
