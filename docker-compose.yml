@@ -4,6 +4,7 @@ services:
   backend:
     build: ./backend
     command: python manage.py runserver 0.0.0.0:8000
+    entrypoint: ./entrypoint.sh
     volumes:
       - ./backend:/app
     ports:
@@ -13,7 +14,7 @@ services:
       - redis
     environment:
       - DEBUG=1
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/lms_db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/kreditai_db
 
   frontend:
     build: ./frontend
@@ -30,7 +31,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_DB=lms_db
+      - POSTGRES_DB=kreditai_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
 
@@ -48,7 +49,7 @@ services:
       - db
       - redis
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/lms_db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/kreditai_db
 
 volumes:
   postgres_data:

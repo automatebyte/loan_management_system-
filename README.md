@@ -1,10 +1,10 @@
-# Loan Management System (LMS)
+# KreditAI
 
-A multi-tenant, white-label Loan Management System built with Django REST Framework and React.
+A multi-tenant, AI-powered Loan Management System built with Django REST Framework and React.
 
 ## Project Overview
 
-This system provides comprehensive loan management capabilities for financial institutions, including:
+KreditAI provides comprehensive AI-powered loan management capabilities for financial institutions, including:
 - Multi-tenant architecture with data isolation
 - Role-based access control (RBAC)
 - Complete loan lifecycle management
@@ -24,7 +24,7 @@ This system provides comprehensive loan management capabilities for financial in
 1. Clone the repository
 2. Copy environment variables: `cp .env.example .env`
 3. Build and run: `docker-compose up --build`
-4. Access the application at `http://localhost:3000`
+4. Access KreditAI at `http://localhost:3000`
 
 ## Development Workflow
 

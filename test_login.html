@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LMS Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>LMS Authentication Test</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" value="superadmin">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button type="submit">Test Login</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>Login Successful!</h3>
+                        <p><strong>User:</strong> ${data.user.first_name} ${data.user.last_name}</p>
+                        <p><strong>Role:</strong> ${data.user.role}</p>
+                        <p><strong>Email:</strong> ${data.user.email}</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h3>Login Failed</h3><p>${JSON.stringify(data)}</p>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h3>Connection Error</h3><p>${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
