@@ -6,10 +6,28 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
-from .serializers import UserSerializer
 from .permissions import IsCompanyAdmin, IsSuperAdmin
 
 User = get_user_model()
+
+# Minimal ViewSets to fix deployment
+class LoanOfficerViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    
+    def list(self, request):
+        return Response({"message": "Loan officers endpoint"})
+    
+    def create(self, request):
+        return Response({"message": "Create loan officer endpoint"})
+
+class ClientViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    
+    def list(self, request):
+        return Response({"message": "Clients endpoint"})
+    
+    def create(self, request):
+        return Response({"message": "Create client endpoint"})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
