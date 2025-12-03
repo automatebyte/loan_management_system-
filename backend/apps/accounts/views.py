@@ -30,15 +30,25 @@ class ClientViewSet(viewsets.ViewSet):
         return Response({"message": "Create client endpoint"})
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def create_loan_officer(request):
     """Create loan officer - Company Admin only"""
-    if request.user.role != 'company_admin':
-        return Response({'error': 'Only company admins can create loan officers'}, status=403)
+    # Get user from token manually for debugging
+    from rest_framework_simplejwt.authentication import JWTAuthentication
+    from rest_framework_simplejwt.exceptions import InvalidToken
+    
+    try:
+        jwt_auth = JWTAuthentication()
+        validated_token = jwt_auth.get_validated_token(jwt_auth.get_raw_token(jwt_auth.get_header(request)))
+        user = jwt_auth.get_user(validated_token)
+        
+        if user.role != 'company_admin':
+            return Response({'error': 'Only company admins can create loan officers'}, status=403)
+    except (InvalidToken, AttributeError):
+        return Response({'error': 'Authentication required'}, status=401)
     
     try:
         data = request.data
-        company = request.user.company
+        company = user.company
         
         # Simple username and password
         username = f"{data['first_name'].lower()}_{company.id}"
@@ -82,9 +92,18 @@ def login(request):
     if not username or not password:
         return Response({'error': 'Username and password required'}, status=400)
     
+    # Try to authenticate with username first
     user = authenticate(username=username, password=password)
     
-    if user:
+    # If that fails, try to find user by email and authenticate
+    if not user:
+        try:
+            user_obj = User.objects.get(email=username)
+            user = authenticate(username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            pass
+    
+    if user and user.is_active:
         refresh = RefreshToken.for_user(user)
         return Response({
             'token': str(refresh.access_token),
