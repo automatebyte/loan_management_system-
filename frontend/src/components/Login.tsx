@@ -48,7 +48,9 @@ const Login: React.FC = () => {
       console.error('Error response:', err.response?.data);
       console.error('Error status:', err.response?.status);
       
-      if (err.response?.status === 403) {
+      if (err.response?.status === 429) {
+        setError('Too many login attempts. Please wait a few minutes and try again.');
+      } else if (err.response?.status === 403) {
         setError('Access forbidden. Please check your credentials.');
       } else if (err.response?.status === 400) {
         setError('Invalid credentials');

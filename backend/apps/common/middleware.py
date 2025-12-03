@@ -24,15 +24,15 @@ class SecurityMiddleware(MiddlewareMixin):
             requests = cache.get(cache_key, [])
             now = time.time()
             
-            # Remove requests older than 1 hour
-            requests = [req_time for req_time in requests if now - req_time < 3600]
+            # Remove requests older than 15 minutes (more reasonable window)
+            requests = [req_time for req_time in requests if now - req_time < 900]
             
-            # Check if limit exceeded (10 requests per hour)
-            if len(requests) >= 10:
+            # Check if limit exceeded (50 requests per hour for production)
+            if len(requests) >= 50:
                 return JsonResponse({'error': 'Rate limit exceeded'}, status=429)
             
             requests.append(now)
-            cache.set(cache_key, requests, 3600)
+            cache.set(cache_key, requests, 900)
         
         # Input sanitization
         if request.method in ['POST', 'PUT', 'PATCH']:
