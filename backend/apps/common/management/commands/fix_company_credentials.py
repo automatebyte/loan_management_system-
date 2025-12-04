@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 self.stdout.write('  Creating admin user...')
                 admin_user, password = create_company_admin(company)
                 
-                self.stdout.write(f'  ✅ Created admin user:')
+                self.stdout.write(f'  [CREATED] Admin user:')
                 self.stdout.write(f'     Username: {admin_user.username}')
                 self.stdout.write(f'     Email: {admin_user.email}')
                 self.stdout.write(f'     Password: {password}')
@@ -51,10 +51,10 @@ class Command(BaseCommand):
                         company_name=company.name,
                         temp_password=password
                     )
-                    self.stdout.write('  📧 Welcome email sent')
+                    self.stdout.write('  [EMAIL] Welcome email sent')
                     
             elif admin_user:
-                self.stdout.write(f'  ✅ Admin user exists: {admin_user.username}')
+                self.stdout.write(f'  [EXISTS] Admin user: {admin_user.username}')
                 
                 if options['send_emails']:
                     # Reset password and send email
@@ -69,10 +69,10 @@ class Command(BaseCommand):
                         company_name=company.name,
                         temp_password=new_password
                     )
-                    self.stdout.write(f'  🔄 Password reset and email sent')
+                    self.stdout.write(f'  [RESET] Password reset and email sent')
                     self.stdout.write(f'     New Password: {new_password}')
             else:
-                self.stdout.write('  ❌ No admin user (use --create-missing to fix)')
+                self.stdout.write('  [ERROR] No admin user (use --create-missing to fix)')
             
             self.stdout.write('')
         

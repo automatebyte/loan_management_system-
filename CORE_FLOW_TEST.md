@@ -1,6 +1,6 @@
-# 🎯 CORE FLOW STABILIZATION - TEST CHECKLIST
+# CORE FLOW STABILIZATION - TEST CHECKLIST
 
-## ✅ TESTING STEPS
+## TESTING STEPS
 
 ### **1. SUPER ADMIN LOGIN**
 - URL: `/login`
@@ -35,7 +35,7 @@
 - Password: `Officer123!`
 - Expected: Redirect to `/loan-officer`
 
-## 🔧 SIMPLIFIED FIXES IMPLEMENTED
+## SIMPLIFIED FIXES IMPLEMENTED
 
 ### **Backend Changes:**
 1. **Company Approval** (`/api/companies/{id}/approve/`):
@@ -57,7 +57,7 @@
 2. **CompanyAdminDashboard**: Shows credentials after officer creation
 3. **Login**: Role-based routing works correctly
 
-## 🚀 SUCCESS METRIC
+## SUCCESS METRIC
 
 **Complete Flow Test:**
 ```
@@ -66,7 +66,7 @@ Company Admin Login → Create Officer → Copy Credentials →
 Officer Login → All dashboards load without errors
 ```
 
-## 🔍 DEBUGGING
+## DEBUGGING
 
 If any step fails:
 1. Check browser console for errors
@@ -74,10 +74,10 @@ If any step fails:
 3. Verify credentials are displayed in alerts/console
 4. Test each login separately
 
-## 📋 EXPECTED RESULTS
+## EXPECTED RESULTS
 
-- ✅ No 400/404 errors on approval
-- ✅ Credentials always displayed
-- ✅ All role-based routing works
-- ✅ Simple, predictable passwords
-- ✅ Console logging for easy copying
+- No 400/404 errors on approval
+- Credentials always displayed
+- All role-based routing works
+- Simple, predictable passwords
+- Console logging for easy copying

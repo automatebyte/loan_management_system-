@@ -1,6 +1,6 @@
 # KreditAI Company Admin Login Guide
 
-## 🏢 **FOR APPROVED COMPANIES**
+## **FOR APPROVED COMPANIES**
 
 ### **Step 1: Get Your Credentials**
 After super admin approval, you'll receive an email with:
@@ -20,7 +20,7 @@ After super admin approval, you'll receive an email with:
 - Configure loan products
 - Start processing loans
 
-## 🔧 **TROUBLESHOOTING**
+## **TROUBLESHOOTING**
 
 ### **If Login Fails:**
 1. **Check email**: Ensure you're using the exact email from registration
@@ -31,7 +31,7 @@ After super admin approval, you'll receive an email with:
 - Currently manual process
 - Contact super admin to reset your password
 
-## 📧 **EXPECTED EMAIL CONTENT**
+## **EXPECTED EMAIL CONTENT**
 ```
 Subject: Welcome to KreditAI - Your Account is Ready!
 
@@ -53,7 +53,7 @@ Next Steps:
 Welcome to KreditAI!
 ```
 
-## 🎯 **BUSINESS WORKFLOW**
+## **BUSINESS WORKFLOW**
 1. **Company Registration** → Pending approval
 2. **Super Admin Approval** → User account created + Email sent
 3. **Company Admin Login** → Dashboard access

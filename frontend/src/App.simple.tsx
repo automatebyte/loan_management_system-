@@ -21,7 +21,7 @@ function App() {
         borderRadius: '8px',
         marginBottom: '2rem'
       }}>
-        <h3>System Status: ✅ Online</h3>
+        <h3>System Status: [ONLINE]</h3>
         <p>Backend APIs are fully operational</p>
         <p>Frontend interface is being optimized</p>
       </div>

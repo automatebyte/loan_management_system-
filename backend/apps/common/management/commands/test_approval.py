@@ -34,12 +34,12 @@ class Command(BaseCommand):
                 is_active=False
             )
             
-            self.stdout.write(f"✅ Created test company: {company.name} (ID: {company.id})")
+            self.stdout.write(f"[CREATED] Test company: {company.name} (ID: {company.id})")
             self.stdout.write(f"   Status: {company.subscription_status}")
             self.stdout.write(f"   Admin Email: {company.admin_email}")
             
         except Exception as e:
-            self.stdout.write(f"❌ Failed to create test company: {e}")
+            self.stdout.write(f"[ERROR] Failed to create test company: {e}")
 
     def approve_test_company(self):
         """Test the approval flow"""
@@ -51,10 +51,10 @@ class Command(BaseCommand):
             ).first()
             
             if not company:
-                self.stdout.write("❌ No test company found. Run with --create-test first.")
+                self.stdout.write("[ERROR] No test company found. Run with --create-test first.")
                 return
             
-            self.stdout.write(f"🔧 Testing approval for: {company.name}")
+            self.stdout.write(f"[TESTING] Approval for: {company.name}")
             
             # Test credential creation
             admin_user, temp_password = create_company_admin(company)
@@ -66,7 +66,7 @@ class Command(BaseCommand):
             company.subscription_expiry = date.today() + timedelta(days=14)
             company.save()
             
-            self.stdout.write("✅ APPROVAL TEST SUCCESSFUL!")
+            self.stdout.write("[SUCCESS] APPROVAL TEST SUCCESSFUL!")
             self.stdout.write(f"   Company: {company.name}")
             self.stdout.write(f"   Status: {company.subscription_status}")
             self.stdout.write(f"   Admin Username: {admin_user.username}")
@@ -84,12 +84,12 @@ class Command(BaseCommand):
                     company_name=company.name,
                     temp_password=temp_password
                 )
-                self.stdout.write("📧 Email task queued successfully")
+                self.stdout.write("[EMAIL] Task queued successfully")
             except Exception as e:
-                self.stdout.write(f"⚠️  Email task failed: {e}")
+                self.stdout.write(f"[WARNING] Email task failed: {e}")
             
         except Exception as e:
-            self.stdout.write(f"❌ Approval test failed: {e}")
+            self.stdout.write(f"[ERROR] Approval test failed: {e}")
 
     def show_usage(self):
         self.stdout.write("Usage:")

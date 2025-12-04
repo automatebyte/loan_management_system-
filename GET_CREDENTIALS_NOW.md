@@ -1,8 +1,8 @@
-# 🔑 GET YOUR COMPANY CREDENTIALS RIGHT NOW
+# GET YOUR COMPANY CREDENTIALS RIGHT NOW
 
 ## IMMEDIATE ACCESS TO APPROVED COMPANY CREDENTIALS
 
-### **METHOD 1: Super Admin Dashboard (EASIEST)**
+### **METHOD 1: Super Admin Dashboard (RECOMMENDED)**
 1. **Login to Super Admin Dashboard**: https://kreditai.onrender.com/login
 2. **Go to Company Management section**
 3. **Find your approved companies**
@@ -24,7 +24,7 @@ curl -H "Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN" \
 3. **New credentials generated and displayed**
 4. **Email sent (if configured) + shown in response**
 
-## 📋 COMPLETE WORKFLOW (NOW WORKING)
+## COMPLETE WORKFLOW (NOW WORKING)
 
 ### **For New Companies:**
 ```
@@ -47,14 +47,14 @@ curl -H "Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN" \
 6. Send credentials to company manually or via email
 ```
 
-## 🔐 LOGIN PROCESS FOR COMPANIES
+## LOGIN PROCESS FOR COMPANIES
 
 **Login URL**: https://kreditai.onrender.com/login
 **Username**: Company admin email address
 **Password**: Generated 12-character secure password
 **Result**: Automatic redirect to Company Admin Dashboard
 
-## 📧 EMAIL CONFIGURATION (OPTIONAL)
+## EMAIL CONFIGURATION (OPTIONAL)
 
 The system works WITHOUT email - credentials are always displayed in dashboard.
 
@@ -65,14 +65,14 @@ EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=noreply@kreditai.com
 ```
 
-## ✅ VERIFICATION STEPS
+## VERIFICATION STEPS
 
 1. **Test the approval flow** with a new registration
 2. **Check existing companies** via "View Credentials"
 3. **Test login** with generated credentials
 4. **Verify company dashboard** loads correctly
 
-## 🆘 EMERGENCY CREDENTIAL RETRIEVAL
+## EMERGENCY CREDENTIAL RETRIEVAL
 
 If dashboard doesn't work, use the management commands:
 
@@ -82,4 +82,4 @@ python manage.py debug_registration
 python manage.py fix_credentials
 ```
 
-**Your business is no longer blocked - companies can login now!** 🎉
+**Your business is no longer blocked - companies can login now!**

@@ -40,7 +40,7 @@ const AuthDebug: React.FC = () => {
         <Typography variant="h6" gutterBottom>Authentication Debug Info</Typography>
         
         <Typography variant="body2" sx={{ fontFamily: 'monospace', mb: 1 }}>
-          <strong>Has Token:</strong> {authInfo.hasToken ? '✅ Yes' : '❌ No'}
+          <strong>Has Token:</strong> {authInfo.hasToken ? '[YES]' : '[NO]'}
         </Typography>
         
         {authInfo.token && (

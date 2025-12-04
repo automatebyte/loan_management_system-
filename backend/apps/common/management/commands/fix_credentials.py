@@ -29,14 +29,14 @@ class Command(BaseCommand):
             admin_users = User.objects.filter(company=company, role='company_admin')
             
             if not admin_users:
-                self.stdout.write(f"🔧 Fixing credentials for: {company.name}")
+                self.stdout.write(f"[FIXING] Credentials for: {company.name}")
                 
                 if not dry_run:
                     try:
                         admin_user, temp_password = create_company_admin(company)
-                        self.stdout.write(f"   ✅ Created admin user: {admin_user.username}")
-                        self.stdout.write(f"   🔑 Password: {temp_password}")
-                        self.stdout.write(f"   📧 Email: {admin_user.email}")
+                        self.stdout.write(f"   [CREATED] Admin user: {admin_user.username}")
+                        self.stdout.write(f"   [PASSWORD] {temp_password}")
+                        self.stdout.write(f"   [EMAIL] {admin_user.email}")
                         
                         # Send welcome email
                         from apps.common.email_service import send_welcome_email
@@ -47,14 +47,14 @@ class Command(BaseCommand):
                                 company_name=company.name,
                                 temp_password=temp_password
                             )
-                            self.stdout.write(f"   📨 Welcome email queued")
+                            self.stdout.write(f"   [QUEUED] Welcome email")
                         except Exception as e:
-                            self.stdout.write(f"   ⚠️  Email failed: {e}")
+                            self.stdout.write(f"   [WARNING] Email failed: {e}")
                         
                         fixed_count += 1
                         
                     except Exception as e:
-                        self.stdout.write(f"   ❌ Failed to create user: {e}")
+                        self.stdout.write(f"   [ERROR] Failed to create user: {e}")
                 else:
                     self.stdout.write(f"   Would create admin user for {company.admin_email}")
                     fixed_count += 1
@@ -62,17 +62,17 @@ class Command(BaseCommand):
                 self.stdout.write("   ---")
         
         if fixed_count == 0:
-            self.stdout.write("✅ All approved companies already have admin users")
+            self.stdout.write("[OK] All approved companies already have admin users")
         else:
             if dry_run:
-                self.stdout.write(f"\n📊 Would fix {fixed_count} companies")
+                self.stdout.write(f"\n[DRY-RUN] Would fix {fixed_count} companies")
             else:
-                self.stdout.write(f"\n✅ Fixed {fixed_count} companies")
+                self.stdout.write(f"\n[COMPLETE] Fixed {fixed_count} companies")
         
         # Also check for pending companies
         pending_companies = Company.objects.filter(subscription_status='pending_approval')
         if pending_companies:
-            self.stdout.write(f"\n📋 {pending_companies.count()} companies still pending approval:")
+            self.stdout.write(f"\n[PENDING] {pending_companies.count()} companies still pending approval:")
             for company in pending_companies:
                 self.stdout.write(f"   - {company.name} ({company.admin_email})")
         

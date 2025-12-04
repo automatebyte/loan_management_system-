@@ -1,4 +1,4 @@
-# 🔑 IMMEDIATE CREDENTIAL SOLUTION FOR YOUR COMPANIES
+# IMMEDIATE CREDENTIAL SOLUTION FOR YOUR COMPANIES
 
 ## **STEP 1: CHECK EXISTING COMPANIES**
 
@@ -39,7 +39,7 @@ python manage.py fix_company_credentials --company-id=1 --create-missing --send-
 **For each approved company, share:**
 
 ```
-🏢 COMPANY LOGIN INSTRUCTIONS
+COMPANY LOGIN INSTRUCTIONS
 
 Login URL: https://kreditai1.onrender.com/
 Username: [shown in credentials modal]
@@ -58,15 +58,15 @@ SUPPORT: Contact DonMeli if you have login issues
 ## **STEP 5: CREDENTIAL MANAGEMENT FEATURES**
 
 **Super Admin Can:**
-- ✅ View all company credentials
-- ✅ Reset company admin passwords
-- ✅ Resend credential emails
-- ✅ See last login activity
+- [ALLOWED] View all company credentials
+- [ALLOWED] Reset company admin passwords
+- [ALLOWED] Resend credential emails
+- [ALLOWED] See last login activity
 
 **Company Admin Can:**
-- ✅ Add loan officers (auto-generates credentials)
-- ✅ Manage loan officer accounts
-- ✅ View company settings
+- [ALLOWED] Add loan officers (auto-generates credentials)
+- [ALLOWED] Manage loan officer accounts
+- [ALLOWED] View company settings
 
 ## **STEP 6: TROUBLESHOOTING**
 
