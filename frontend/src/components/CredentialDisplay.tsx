@@ -22,7 +22,7 @@ const CredentialDisplay: React.FC<CredentialDisplayProps> = ({
   return (
     <Paper sx={{ p: 3, bgcolor: '#f8fafc', border: '2px solid #10b981' }}>
       <Typography variant="h6" sx={{ mb: 2, color: '#059669' }}>
-        🎉 {companyName} - Login Credentials Generated
+        [SUCCESS] {companyName} - Login Credentials Generated
       </Typography>
       
       <Box sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
@@ -70,7 +70,7 @@ const CredentialDisplay: React.FC<CredentialDisplayProps> = ({
       </Box>
       
       <Typography variant="body2" sx={{ mt: 2, color: '#6b7280' }}>
-        💡 Send these credentials to the company admin. They can change the password after first login.
+        [NOTE] Send these credentials to the company admin. They can change the password after first login.
       </Typography>
     </Paper>
   );

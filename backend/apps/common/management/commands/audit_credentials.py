@@ -28,13 +28,13 @@ class Command(BaseCommand):
             
             if admin_users.exists():
                 for admin in admin_users:
-                    self.stdout.write(f'✅ Admin User Found:')
+                    self.stdout.write(f'[FOUND] Admin User:')
                     self.stdout.write(f'   Username: {admin.username}')
                     self.stdout.write(f'   Email: {admin.email}')
                     self.stdout.write(f'   Active: {admin.is_active}')
                     self.stdout.write(f'   Last Login: {admin.last_login}')
             else:
-                self.stdout.write('❌ NO ADMIN USER FOUND')
+                self.stdout.write('[ERROR] NO ADMIN USER FOUND')
                 
             # Check loan officers
             officers = User.objects.filter(

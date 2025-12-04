@@ -275,8 +275,8 @@ const SuperAdminDashboard: React.FC = () => {
         </Button>
         {showDebug && (
           <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
-            <Typography variant="body2"><strong>Token:</strong> {localStorage.getItem('token') ? '✅ Present' : '❌ Missing'}</Typography>
-            <Typography variant="body2"><strong>User:</strong> {localStorage.getItem('user') || '❌ Missing'}</Typography>
+            <Typography variant="body2"><strong>Token:</strong> {localStorage.getItem('token') ? '[OK] Present' : '[ERROR] Missing'}</Typography>
+            <Typography variant="body2"><strong>User:</strong> {localStorage.getItem('user') || '[ERROR] Missing'}</Typography>
             <Typography variant="body2"><strong>API URL:</strong> {process.env.REACT_APP_API_URL || 'http://localhost:8000'}</Typography>
             <Typography variant="body2"><strong>Current URL:</strong> {window.location.href}</Typography>
           </Box>
@@ -394,7 +394,7 @@ const SuperAdminDashboard: React.FC = () => {
           }}>
             <Box sx={{ p: { xs: 2, md: 3 }, borderBottom: '1px solid #e5e7eb' }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'warning.main' }}>
-                🔔 Pending Approvals ({companies.filter(c => c.subscription_status === 'pending_approval').length})
+                [PENDING] Approvals ({companies.filter(c => c.subscription_status === 'pending_approval').length})
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 New company registrations awaiting approval
