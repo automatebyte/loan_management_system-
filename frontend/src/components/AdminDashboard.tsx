@@ -47,7 +47,7 @@ const AdminDashboard: React.FC = () => {
       const response = await api.get('/api/auth/loan-officers/');
       setOfficers(response.data);
     } catch (error) {
-      console.error('Error fetching loan officers:', error);
+      
     }
   };
 
@@ -73,14 +73,8 @@ const AdminDashboard: React.FC = () => {
       if (response.data.success && response.data.credentials) {
         const { username, password, email } = response.data.credentials;
         alert(`Loan Officer Created!\n\nUsername: ${username}\nPassword: ${password}\nEmail: ${email}\n\nPlease save these credentials.`);
-        
-        console.log('Loan Officer Created:');
-        console.log('Username:', username);
-        console.log('Password:', password);
-        console.log('Email:', email);
       }
     } catch (error: any) {
-      console.error('Error creating loan officer:', error);
       alert(`Error: ${error.response?.data?.error || 'Failed to create loan officer'}`);
     }
   };
@@ -91,7 +85,7 @@ const AdminDashboard: React.FC = () => {
       await api.post(`/api/auth/loan-officers/${id}/${action}/`);
       fetchLoanOfficers();
     } catch (error) {
-      console.error('Error updating officer status:', error);
+      
     }
   };
 

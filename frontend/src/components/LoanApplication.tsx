@@ -24,7 +24,6 @@ const LoanApplication: React.FC = () => {
       const response = await loanAPI.getProducts();
       setProducts(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 

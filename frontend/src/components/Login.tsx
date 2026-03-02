@@ -8,7 +8,6 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   
-  // Clear any stale tokens on component mount
   React.useEffect(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -18,16 +17,11 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     
-    // Clear any existing tokens before login
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    console.log('Attempting login with:', credentials);
-    console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8000');
-    
     try {
       const response = await authAPI.login(credentials);
-      console.log('Login successful:', response.data);
       
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -44,10 +38,6 @@ const Login: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      console.error('Login error:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
       if (err.response?.status === 429) {
         setError('Too many login attempts. Please wait a few minutes and try again.');
       } else if (err.response?.status === 403) {
