@@ -5,13 +5,12 @@ from apps.loans.utils import generate_client_id
 from apps.common.validators import validate_image_file, validate_document_file
 
 class User(AbstractUser):
-    """Extended user model with company association"""
-    company = models.ForeignKey('companies.Company', on_delete=models.CASCADE, null=True, blank=True)
+    """Extended user model for KreditAI"""
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=20, choices=[
-        ('super_admin', 'Super Admin'),
-        ('company_admin', 'Company Admin'),
-        ('loan_officer', 'Loan Officer'),
+        ('admin', 'Admin'),
+        ('field_officer', 'Field Officer'),
+        ('clerk', 'Clerk'),
         ('client', 'Client'),
     ], default='client')
     
@@ -21,7 +20,6 @@ class User(AbstractUser):
 class Client(BaseModel):
     """Client profile for loan applicants"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    company = models.ForeignKey('companies.Company', on_delete=models.CASCADE)
     client_id = models.CharField(max_length=20, unique=True)
     date_of_birth = models.DateField()
     national_id = models.CharField(max_length=50)
@@ -64,3 +62,32 @@ class Client(BaseModel):
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.client_id}"
+
+class Target(BaseModel):
+    """Performance targets for field officers"""
+    field_officer = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'field_officer'})
+    target_type = models.CharField(max_length=20, choices=[
+        ('loans', 'Loan Count'),
+        ('amount', 'Loan Amount'),
+        ('clients', 'Client Acquisition'),
+    ])
+    target_value = models.DecimalField(max_digits=12, decimal_places=2)
+    achieved_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    period_start = models.DateField()
+    period_end = models.DateField()
+    
+    def __str__(self):
+        return f"{self.field_officer.get_full_name()} - {self.target_type}: {self.achieved_value}/{self.target_value}"
+
+class PerformanceMetric(BaseModel):
+    """Track staff performance metrics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    metric_type = models.CharField(max_length=50)
+    value = models.DecimalField(max_digits=12, decimal_places=2)
+    period = models.DateField()
+    
+    class Meta:
+        unique_together = ['user', 'metric_type', 'period']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.metric_type}: {self.value}"

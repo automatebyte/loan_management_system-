@@ -4,8 +4,7 @@ from apps.common.models import BaseModel
 from .utils import generate_loan_id
 
 class LoanProduct(BaseModel):
-    """Loan product configuration per company"""
-    company = models.ForeignKey('companies.Company', on_delete=models.CASCADE)
+    """Loan product configuration for Eagle Trend"""
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
@@ -16,11 +15,10 @@ class LoanProduct(BaseModel):
     max_term_months = models.PositiveIntegerField()
     
     def __str__(self):
-        return f"{self.company.name} - {self.name}"
+        return self.name
 
 class Loan(BaseModel):
     """Core loan model"""
-    company = models.ForeignKey('companies.Company', on_delete=models.CASCADE)
     client = models.ForeignKey('accounts.Client', on_delete=models.CASCADE)
     loan_officer = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(LoanProduct, on_delete=models.CASCADE)
@@ -84,3 +82,36 @@ class Payment(BaseModel):
     
     def __str__(self):
         return f"{self.loan.loan_id} - {self.amount}"
+
+class PaymentSchedule(BaseModel):
+    """Payment schedule for loans"""
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='schedule')
+    due_date = models.DateField()
+    amount_due = models.DecimalField(max_digits=12, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('overdue', 'Overdue'),
+        ('partial', 'Partially Paid'),
+    ], default='pending')
+    
+    def __str__(self):
+        return f"{self.loan.loan_id} - Due: {self.due_date} - {self.status}"
+
+class Expense(BaseModel):
+    """Daily expense tracking for clerks"""
+    date = models.DateField()
+    category = models.CharField(max_length=50, choices=[
+        ('office', 'Office Supplies'),
+        ('transport', 'Transportation'),
+        ('utilities', 'Utilities'),
+        ('other', 'Other'),
+    ])
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    receipt = models.FileField(upload_to='expenses/', null=True, blank=True)
+    recorded_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    
+    def __str__(self):
+        return f"{self.date} - {self.category} - {self.amount}"

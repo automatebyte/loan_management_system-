@@ -3,13 +3,13 @@ from .models import LoanProduct, Loan, Payment
 
 @admin.register(LoanProduct)
 class LoanProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'company', 'interest_rate', 'min_amount', 'max_amount']
-    list_filter = ['company']
+    list_display = ['name', 'interest_rate', 'min_amount', 'max_amount']
+    list_filter = []
 
 @admin.register(Loan)
 class LoanAdmin(admin.ModelAdmin):
-    list_display = ['loan_id', 'client', 'company', 'amount', 'status']
-    list_filter = ['company', 'status', 'product']
+    list_display = ['loan_id', 'client', 'amount', 'status']
+    list_filter = ['status', 'product']
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):

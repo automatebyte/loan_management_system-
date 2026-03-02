@@ -5,9 +5,22 @@ from django.utils import timezone
 from decimal import Decimal
 from .models import LoanProduct, Loan, Payment, Transaction
 from .serializers import LoanProductSerializer, LoanApplicationSerializer, LoanSerializer, PaymentSerializer, TransactionSerializer
-from apps.accounts.permissions import IsLoanOfficer, IsClient, IsSameCompany, IsCompanyAdmin, TenantIsolationMixin
+from apps.accounts.permissions import IsFieldOfficer, IsClient
+from apps.common.permissions import IsCompanyAdmin
 from .services import LoanCalculationService
 from .tasks import send_loan_notification
+
+IsLoanOfficer = IsFieldOfficer
+
+class TenantIsolationMixin:
+    def get_queryset(self):
+        qs = self.queryset if hasattr(self, 'queryset') else self.model.objects.all()
+        if hasattr(self.request.user, 'company') and self.request.user.company:
+            return qs.filter(company=self.request.user.company)
+        return qs
+
+class IsSameCompany:
+    pass
 
 class LoanProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     serializer_class = LoanProductSerializer
@@ -90,7 +103,6 @@ class LoanViewSet(viewsets.ModelViewSet):
         except (ValueError, TypeError):
             return Response({'error': 'Invalid amount format'}, status=400)
         
-        # Use calculation service for proper payment allocation
         payment_result = LoanCalculationService.process_payment(loan, amount)
         
         return Response({
@@ -98,6 +110,18 @@ class LoanViewSet(viewsets.ModelViewSet):
             'payment_breakdown': payment_result,
             'new_balance': loan.outstanding_balance
         })
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        loans = self.get_queryset().filter(status__in=['active', 'disbursed'])
+        serializer = self.get_serializer(loans, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def inactive(self, request):
+        loans = self.get_queryset().filter(status__in=['completed', 'defaulted'])
+        serializer = self.get_serializer(loans, many=True)
+        return Response(serializer.data)
 
 class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer

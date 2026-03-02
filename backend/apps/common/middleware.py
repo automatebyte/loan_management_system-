@@ -4,16 +4,6 @@ from django.utils.deprecation import MiddlewareMixin
 import time
 import re
 
-class MultiTenantMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if hasattr(request.user, 'company') and request.user.company:
-            request.tenant = request.user.company
-        response = self.get_response(request)
-        return response
-
 class SecurityMiddleware(MiddlewareMixin):
     def process_request(self, request):
         # Rate limiting for authentication endpoints

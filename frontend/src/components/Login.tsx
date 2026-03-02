@@ -32,12 +32,12 @@ const Login: React.FC = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      if (response.data.user.role === 'super_admin') {
-        navigate('/super-admin');
-      } else if (response.data.user.role === 'company_admin') {
-        navigate('/company-admin');
-      } else if (response.data.user.role === 'loan_officer') {
-        navigate('/loan-officer');
+      if (response.data.user.role === 'admin') {
+        navigate('/admin');
+      } else if (response.data.user.role === 'field_officer' || response.data.user.role === 'loan_officer') {
+        navigate('/field-officer');
+      } else if (response.data.user.role === 'clerk') {
+        navigate('/clerk');
       } else if (response.data.user.role === 'client') {
         navigate('/client-portal');
       } else {
@@ -64,7 +64,10 @@ const Login: React.FC = () => {
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
       <Card sx={{ p: 4, maxWidth: 400, width: '100%' }}>
         <Typography variant="h4" textAlign="center" mb={3}>
-          KreditAI Login
+          Eagle Trend
+        </Typography>
+        <Typography variant="body2" textAlign="center" color="textSecondary" mb={3}>
+          Professional Loan Management System
         </Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
@@ -90,14 +93,7 @@ const Login: React.FC = () => {
         
         <Box textAlign="center" mt={3}>
           <Typography variant="body2" color="textSecondary">
-            New to KreditAI?{' '}  
-            <Button 
-              variant="text" 
-              onClick={() => navigate('/register')}
-              sx={{ textTransform: 'none' }}
-            >
-              Start Free Trial
-            </Button>
+            © 2024 Eagle Trend. All rights reserved.
           </Typography>
         </Box>
       </Card>

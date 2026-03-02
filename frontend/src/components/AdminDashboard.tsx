@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Typography, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
+  TableCell, TableHead, TableRow, Chip, IconButton,
   TextField, useMediaQuery, useTheme
 } from '@mui/material';
 import { Edit, Add, Person, Block, CheckCircle } from '@mui/icons-material';
@@ -23,7 +23,7 @@ interface LoanOfficer {
   date_joined: string;
 }
 
-const CompanyAdminDashboard: React.FC = () => {
+const AdminDashboard: React.FC = () => {
   const [officers, setOfficers] = useState<LoanOfficer[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [newOfficer, setNewOfficer] = useState({
@@ -70,7 +70,6 @@ const CompanyAdminDashboard: React.FC = () => {
       });
       fetchLoanOfficers();
       
-      // Show credentials
       if (response.data.success && response.data.credentials) {
         const { username, password, email } = response.data.credentials;
         alert(`Loan Officer Created!\n\nUsername: ${username}\nPassword: ${password}\nEmail: ${email}\n\nPlease save these credentials.`);
@@ -108,8 +107,8 @@ const CompanyAdminDashboard: React.FC = () => {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
       <ResponsiveNavbar
-        title="KreditAI"
-        userRole="Company Admin"
+        title="Eagle Trend"
+        userRole="Admin"
         onLogout={handleLogout}
       />
       
@@ -136,7 +135,6 @@ const CompanyAdminDashboard: React.FC = () => {
           </Button>
         </Box>
 
-        {/* Dashboard Stats */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 3, md: 4 } }}>
           <Grid item xs={6} sm={6} md={3}>
             <StatCard 
@@ -176,7 +174,6 @@ const CompanyAdminDashboard: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Loan Officers Table */}
         <Box sx={{ overflowX: 'auto' }}>
           <Table sx={{ minWidth: { xs: 300, md: 650 } }}>
             <TableHead>
@@ -239,7 +236,6 @@ const CompanyAdminDashboard: React.FC = () => {
           </Table>
         </Box>
 
-        {/* Create Officer Modal */}
         <ResponsiveModal
           open={openDialog}
           onClose={() => setOpenDialog(false)}
@@ -321,4 +317,4 @@ const CompanyAdminDashboard: React.FC = () => {
   );
 };
 
-export default CompanyAdminDashboard;
+export default AdminDashboard;
