@@ -3,6 +3,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, get_user_model
+from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Client
 from .permissions import IsAdmin, IsFieldOfficer
@@ -15,18 +16,28 @@ class FieldOfficerViewSet(viewsets.ViewSet):
     
     def list(self, request):
         officers = User.objects.filter(role='field_officer')
+        search = request.query_params.get('search', None)
+        if search:
+            officers = officers.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(username__icontains=search)
+            )
         return Response([{
-            'id': officer.id,
-            'username': officer.username,
-            'email': officer.email,
-            'first_name': officer.first_name,
-            'last_name': officer.last_name,
-            'is_active': officer.is_active
-        } for officer in officers])
+            'id': o.id,
+            'username': o.username,
+            'email': o.email,
+            'first_name': o.first_name,
+            'last_name': o.last_name,
+            'phone': o.phone,
+            'is_active': o.is_active,
+            'full_name': o.get_full_name()
+        } for o in officers])
     
     def create(self, request):
         if request.user.role != 'admin':
-            return Response({'error': 'Only admins can create field officers'}, status=403)
+            return Response({'error': 'Unauthorized'}, status=403)
         
         data = request.data
         username = f"{data['first_name'].lower()}_{data['last_name'].lower()}"
@@ -37,6 +48,7 @@ class FieldOfficerViewSet(viewsets.ViewSet):
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
+            phone=data.get('phone', ''),
             role='field_officer',
             is_active=True
         )
@@ -47,6 +59,17 @@ class FieldOfficerViewSet(viewsets.ViewSet):
             'success': True,
             'credentials': {'username': username, 'password': password}
         }, status=201)
+    
+    def destroy(self, request, pk=None):
+        if request.user.role != 'admin':
+            return Response({'error': 'Unauthorized'}, status=403)
+        try:
+            user = User.objects.get(pk=pk, role='field_officer')
+            user.is_active = False
+            user.save()
+            return Response(status=204)
+        except User.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
 
 class LoanOfficerViewSet(FieldOfficerViewSet):
     pass
@@ -56,9 +79,19 @@ class ClientViewSet(viewsets.ModelViewSet):
     serializer_class = ClientSerializer
     
     def get_queryset(self):
+        queryset = Client.objects.all()
         if self.request.user.role == 'field_officer':
-            return Client.objects.filter(loan_officer=self.request.user)
-        return Client.objects.all()
+            queryset = queryset.filter(loan_officer=self.request.user)
+        
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__phone__icontains=search) |
+                Q(client_id__icontains=search)
+            )
+        return queryset
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -70,6 +103,12 @@ class ClientViewSet(viewsets.ModelViewSet):
             serializer.save(loan_officer=self.request.user)
         else:
             serializer.save()
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=204)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

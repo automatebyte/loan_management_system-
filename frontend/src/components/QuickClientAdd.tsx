@@ -24,6 +24,10 @@ interface ClientData {
   address: string;
   monthly_income: string;
   employment_status: string;
+  occupation: string;
+  industry: string;
+  home_location: string;
+  business_location: string;
   next_of_kin: Array<{full_name: string; relationship: string; phone: string}>;
   guarantor: {full_name: string; id_number: string; phone: string; occupation: string};
 }
@@ -46,6 +50,10 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
     address: '',
     monthly_income: '',
     employment_status: 'employed',
+    occupation: '',
+    industry: '',
+    home_location: '',
+    business_location: '',
     next_of_kin: [{full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}],
     guarantor: {full_name: '', id_number: '', phone: '', occupation: ''}
   });
@@ -222,6 +230,38 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
                 <MenuItem value="self_employed">Self Employed</MenuItem>
                 <MenuItem value="unemployed">Unemployed</MenuItem>
               </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Occupation"
+                value={clientData.occupation}
+                onChange={(e) => setClientData({ ...clientData, occupation: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Industry"
+                value={clientData.industry}
+                onChange={(e) => setClientData({ ...clientData, industry: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Home Location"
+                value={clientData.home_location}
+                onChange={(e) => setClientData({ ...clientData, home_location: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Business Location"
+                value={clientData.business_location}
+                onChange={(e) => setClientData({ ...clientData, business_location: e.target.value })}
+              />
             </Grid>
           </Grid>
         );

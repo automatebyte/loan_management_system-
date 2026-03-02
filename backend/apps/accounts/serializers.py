@@ -36,15 +36,17 @@ class UserSerializer(serializers.ModelSerializer):
 class ClientSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.get_full_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
+    phone = serializers.CharField(source='user.phone', read_only=True)
     loan_officer_name = serializers.CharField(source='loan_officer.get_full_name', read_only=True)
     loan_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Client
-        fields = ['id', 'client_id', 'full_name', 'email', 'date_of_birth', 'national_id',
-                 'address', 'monthly_income', 'employment_status', 'identification_picture',
+        fields = ['id', 'client_id', 'full_name', 'email', 'phone', 'date_of_birth', 'national_id',
+                 'address', 'monthly_income', 'employment_status', 'occupation', 'industry',
+                 'home_location', 'business_location', 'identification_picture',
                  'loan_officer_name', 'loan_count', 'next_of_kin', 'guarantor', 'created_at', 'is_active']
-        read_only_fields = ['client_id', 'full_name', 'email', 'loan_officer_name', 'loan_count']
+        read_only_fields = ['client_id', 'full_name', 'email', 'phone', 'loan_officer_name', 'loan_count']
     
     def get_loan_count(self, obj):
         return obj.loan_set.count()
@@ -66,15 +68,17 @@ class ClientCreateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+    phone = serializers.CharField()
     password = serializers.CharField(write_only=True, default='client123')
     next_of_kin = serializers.JSONField(required=False, default=list)
     guarantor = serializers.JSONField(required=False, default=dict)
     
     class Meta:
         model = Client
-        fields = ['username', 'email', 'first_name', 'last_name', 'password',
+        fields = ['username', 'email', 'first_name', 'last_name', 'phone', 'password',
                  'date_of_birth', 'national_id', 'address', 'monthly_income', 
-                 'employment_status', 'identification_picture', 'next_of_kin', 'guarantor']
+                 'employment_status', 'occupation', 'industry', 'home_location', 'business_location',
+                 'identification_picture', 'next_of_kin', 'guarantor']
     
     def create(self, validated_data):
         user_data = {
@@ -82,6 +86,7 @@ class ClientCreateSerializer(serializers.ModelSerializer):
             'email': validated_data.pop('email'),
             'first_name': validated_data.pop('first_name'),
             'last_name': validated_data.pop('last_name'),
+            'phone': validated_data.pop('phone', ''),
             'password': validated_data.pop('password', 'client123'),
             'role': 'client'
         }

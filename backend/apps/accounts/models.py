@@ -55,6 +55,10 @@ class Client(BaseModel):
     )
     loan_officer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_clients')
     
+    occupation = models.CharField(max_length=100, blank=True)
+    industry = models.CharField(max_length=100, blank=True)
+    home_location = models.TextField(blank=True)
+    business_location = models.TextField(blank=True)
     next_of_kin = models.JSONField(default=list, blank=True)
     guarantor = models.JSONField(default=dict, blank=True)
     
