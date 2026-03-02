@@ -74,12 +74,11 @@ class ClientViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
-    """Login endpoint for Eagle Trend"""
     username = request.data.get('username')
     password = request.data.get('password')
     
     if not username or not password:
-        return Response({'error': 'Username and password required'}, status=400)
+        return Response({'error': 'Username and password required', 'non_field_errors': ['Username and password required']}, status=400)
     
     user = authenticate(username=username, password=password)
     
@@ -103,8 +102,8 @@ def login(request):
                 'last_name': user.last_name
             }
         })
-    else:
-        return Response({'error': 'Invalid credentials'}, status=400)
+    
+    return Response({'error': 'Invalid credentials', 'non_field_errors': ['Invalid username or password']}, status=400)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

@@ -38,14 +38,13 @@ const Login: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
+      const errorMsg = err.response?.data?.error || err.response?.data?.non_field_errors?.[0] || 'Login failed';
       if (err.response?.status === 429) {
-        setError('Too many login attempts. Please wait a few minutes and try again.');
-      } else if (err.response?.status === 403) {
-        setError('Access forbidden. Please check your credentials.');
+        setError('Too many login attempts. Please wait and try again.');
       } else if (err.response?.status === 400) {
-        setError('Invalid credentials');
+        setError(errorMsg);
       } else {
-        setError('Login failed. Please try again.');
+        setError('Unable to connect. Please try again.');
       }
     }
   };
