@@ -3,10 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/Login';
-import AdminDashboard from './components/AdminDashboard';
-import FieldOfficerDashboard from './components/FieldOfficerDashboard';
-import ClerkDashboard from './components/ClerkDashboard';
-import ClientPortal from './components/ClientPortal';
+import AdminDashboardNew from './components/AdminDashboardNew';
+import FieldOfficerDashboardNew from './components/FieldOfficerDashboardNew';
+import ClerkDashboardNew from './components/ClerkDashboardNew';
 
 const theme = createTheme({
   palette: {
@@ -142,11 +141,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/field-officer" element={<FieldOfficerDashboard />} />
-          <Route path="/loan-officer" element={<FieldOfficerDashboard />} />
-          <Route path="/clerk" element={<ClerkDashboard />} />
-          <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/admin" element={<AdminDashboardNew />} />
+          <Route path="/field-officer" element={<FieldOfficerDashboardNew />} />
+          <Route path="/loan-officer" element={<FieldOfficerDashboardNew />} />
+          <Route path="/clerk" element={<ClerkDashboardNew />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

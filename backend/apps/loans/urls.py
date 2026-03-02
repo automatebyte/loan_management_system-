@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views, reports, clerk_views
+from . import views, clerk_views
+from .reports import admin_reports, clerk_reports, field_officer_reports
 
 router = DefaultRouter()
 router.register(r'products', views.LoanProductViewSet, basename='loanproduct')
@@ -12,5 +13,7 @@ router.register(r'clerk/debt-analysis', clerk_views.DebtAnalysisViewSet, basenam
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('reports/summary/', reports.loan_summary, name='loan_summary'),
+    path('reports/admin/', admin_reports, name='admin-reports'),
+    path('reports/clerk/', clerk_reports, name='clerk-reports'),
+    path('reports/field-officer/', field_officer_reports, name='field-officer-reports'),
 ]
