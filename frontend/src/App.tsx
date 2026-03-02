@@ -3,19 +3,23 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/Login';
-import CompanyRegistration from './components/CompanyRegistration';
-import SuperAdminDashboard from './components/SuperAdminDashboard';
-import CompanyAdminDashboard from './components/CompanyAdminDashboard';
-import LoanOfficerDashboard from './components/LoanOfficerDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import FieldOfficerDashboard from './components/FieldOfficerDashboard';
+import ClerkDashboard from './components/ClerkDashboard';
 import ClientPortal from './components/ClientPortal';
-import AuthDebug from './components/AuthDebug';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1e3a8a',
-      light: '#3b82f6',
-      dark: '#1e40af',
+      main: '#1a365d',
+      light: '#2c5282',
+      dark: '#0f2942',
+      contrastText: '#ffffff',
+    },
+    warning: {
+      main: '#f59e0b',
+      light: '#fbbf24',
+      dark: '#d97706',
       contrastText: '#ffffff',
     },
     secondary: {
@@ -104,7 +108,7 @@ const theme = createTheme({
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1e3a8a',
+          backgroundColor: '#1a365d',
           '& .MuiTableCell-head': {
             color: '#ffffff',
             fontWeight: 600,
@@ -138,12 +142,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<CompanyRegistration />} />
-          <Route path="/super-admin" element={<SuperAdminDashboard />} />
-          <Route path="/company-admin" element={<CompanyAdminDashboard />} />
-          <Route path="/loan-officer" element={<LoanOfficerDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/field-officer" element={<FieldOfficerDashboard />} />
+          <Route path="/loan-officer" element={<FieldOfficerDashboard />} />
+          <Route path="/clerk" element={<ClerkDashboard />} />
           <Route path="/client-portal" element={<ClientPortal />} />
-          <Route path="/debug" element={<AuthDebug />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

@@ -1,101 +1,88 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
-from .permissions import IsCompanyAdmin, IsSuperAdmin
+from .models import User, Client
+from .permissions import IsAdmin, IsFieldOfficer
+from .serializers import ClientSerializer, ClientCreateSerializer
 
 User = get_user_model()
 
-# Minimal ViewSets to fix deployment
-class LoanOfficerViewSet(viewsets.ViewSet):
+class FieldOfficerViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     
     def list(self, request):
-        return Response({"message": "Loan officers endpoint"})
+        officers = User.objects.filter(role='field_officer')
+        return Response([{
+            'id': officer.id,
+            'username': officer.username,
+            'email': officer.email,
+            'first_name': officer.first_name,
+            'last_name': officer.last_name,
+            'is_active': officer.is_active
+        } for officer in officers])
     
     def create(self, request):
-        return Response({"message": "Create loan officer endpoint"})
-
-class ClientViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-    
-    def list(self, request):
-        return Response({"message": "Clients endpoint"})
-    
-    def create(self, request):
-        return Response({"message": "Create client endpoint"})
-
-@api_view(['POST'])
-def create_loan_officer(request):
-    """Create loan officer - Company Admin only"""
-    # Get user from token manually for debugging
-    from rest_framework_simplejwt.authentication import JWTAuthentication
-    from rest_framework_simplejwt.exceptions import InvalidToken
-    
-    try:
-        jwt_auth = JWTAuthentication()
-        validated_token = jwt_auth.get_validated_token(jwt_auth.get_raw_token(jwt_auth.get_header(request)))
-        user = jwt_auth.get_user(validated_token)
+        if request.user.role != 'admin':
+            return Response({'error': 'Only admins can create field officers'}, status=403)
         
-        if user.role != 'company_admin':
-            return Response({'error': 'Only company admins can create loan officers'}, status=403)
-    except (InvalidToken, AttributeError):
-        return Response({'error': 'Authentication required'}, status=401)
-    
-    try:
         data = request.data
-        company = user.company
+        username = f"{data['first_name'].lower()}_{data['last_name'].lower()}"
+        password = data.get('password', 'Officer123!')
         
-        # Simple username and password
-        username = f"{data['first_name'].lower()}_{company.id}"
-        password = "Officer123!"
-        
-        # Create loan officer
         user = User.objects.create(
             username=username,
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
-            role='loan_officer',
-            company=company,
+            role='field_officer',
             is_active=True
         )
         user.set_password(password)
         user.save()
         
-        # TODO: Re-enable email after core flows stable
-        # send_officer_credentials_email(user, password)
-        
         return Response({
             'success': True,
-            'message': 'Loan officer created successfully',
-            'credentials': {
-                'username': username,
-                'password': password,
-                'email': data['email']
-            }
+            'credentials': {'username': username, 'password': password}
         }, status=201)
-        
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
+
+class LoanOfficerViewSet(FieldOfficerViewSet):
+    pass
+
+class ClientViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ClientSerializer
+    
+    def get_queryset(self):
+        if self.request.user.role == 'field_officer':
+            return Client.objects.filter(loan_officer=self.request.user)
+        return Client.objects.all()
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ClientCreateSerializer
+        return ClientSerializer
+    
+    def perform_create(self, serializer):
+        if self.request.user.role == 'field_officer':
+            serializer.save(loan_officer=self.request.user)
+        else:
+            serializer.save()
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login(request):
-    """Simple login endpoint"""
+    """Login endpoint for Eagle Trend"""
     username = request.data.get('username')
     password = request.data.get('password')
     
     if not username or not password:
         return Response({'error': 'Username and password required'}, status=400)
     
-    # Try to authenticate with username first
     user = authenticate(username=username, password=password)
     
-    # If that fails, try to find user by email and authenticate
     if not user:
         try:
             user_obj = User.objects.get(email=username)
@@ -129,23 +116,5 @@ def profile(request):
         'email': request.user.email,
         'role': request.user.role,
         'first_name': request.user.first_name,
-        'last_name': request.user.last_name,
-        'company': request.user.company.name if request.user.company else None
+        'last_name': request.user.last_name
     })
-
-@api_view(['GET'])
-@permission_classes([IsCompanyAdmin])
-def loan_officers(request):
-    """Get loan officers for company admin"""
-    officers = User.objects.filter(
-        company=request.user.company,
-        role='loan_officer'
-    )
-    return Response([{
-        'id': officer.id,
-        'username': officer.username,
-        'email': officer.email,
-        'first_name': officer.first_name,
-        'last_name': officer.last_name,
-        'is_active': officer.is_active
-    } for officer in officers])

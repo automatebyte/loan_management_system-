@@ -69,19 +69,4 @@ export const loanAPI = {
   getProducts: () => api.get('/api/loans/products/'),
 };
 
-export const companyAPI = {
-  getCompanies: () => api.get('/api/companies/'),
-  createCompany: (companyData: any) => api.post('/api/companies/', companyData),
-  updateCompany: (id: number, companyData: any) => api.patch(`/api/companies/${id}/`, companyData),
-  getDashboardStats: () => api.get('/api/companies/dashboard_stats/'),
-  getMyCompany: () => api.get('/api/companies/my_company/'),
-  approveCompany: (id: number) => api.post(`/api/companies/${id}/approve/`),
-  rejectCompany: (id: number) => api.post(`/api/companies/${id}/reject/`),
-  getCredentials: (id: number) => api.get(`/api/companies/${id}/credentials/`),
-  resetPassword: (id: number) => api.post(`/api/companies/${id}/reset_password/`),
-  updatePaymentStatus: (id: number) => api.post(`/api/companies/${id}/update_payment_status/`),
-  suspendService: (id: number) => api.post(`/api/companies/${id}/suspend_service/`),
-  activateService: (id: number) => api.post(`/api/companies/${id}/activate_service/`),
-};
-
 export default api;

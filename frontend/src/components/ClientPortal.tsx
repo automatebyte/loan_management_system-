@@ -113,7 +113,7 @@ const ClientPortal: React.FC = () => {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
       <ResponsiveNavbar
-        title="KreditAI"
+        title="Eagle Trend"
         userRole="Client"
         onLogout={handleLogout}
       />

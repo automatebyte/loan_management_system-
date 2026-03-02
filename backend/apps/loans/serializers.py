@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LoanProduct, Loan, Payment, Transaction
+from .models import LoanProduct, Loan, Payment, Transaction, PaymentSchedule, Expense
 from apps.accounts.models import Client
 
 class LoanProductSerializer(serializers.ModelSerializer):
@@ -39,3 +39,19 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = ['id', 'amount', 'transaction_type', 'transaction_date', 'notes', 'processed_by_name']
         read_only_fields = ['id', 'transaction_date', 'processed_by_name']
+
+class PaymentScheduleSerializer(serializers.ModelSerializer):
+    loan_id = serializers.CharField(source='loan.loan_id', read_only=True)
+    client_name = serializers.CharField(source='loan.client.user.get_full_name', read_only=True)
+    
+    class Meta:
+        model = PaymentSchedule
+        fields = ['id', 'loan', 'loan_id', 'client_name', 'due_date', 'amount_due', 'amount_paid', 'status']
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    recorded_by_name = serializers.CharField(source='recorded_by.get_full_name', read_only=True)
+    
+    class Meta:
+        model = Expense
+        fields = ['id', 'date', 'category', 'amount', 'description', 'receipt', 'recorded_by', 'recorded_by_name']
+        read_only_fields = ['recorded_by', 'recorded_by_name']

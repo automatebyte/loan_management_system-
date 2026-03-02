@@ -26,7 +26,6 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'apps.common',
     'apps.accounts',
-    'apps.companies',
     'apps.loans',
 ]
 
@@ -39,7 +38,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'apps.common.middleware.MultiTenantMiddleware',
     'apps.common.middleware.SecurityMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -166,4 +164,8 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@kreditai.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@eagletrend.com')
+
+# Eagle Trend Branding
+APP_NAME = 'Eagle Trend'
+APP_DESCRIPTION = 'Professional Loan Management System'

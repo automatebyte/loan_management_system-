@@ -4,13 +4,13 @@ from .models import User, Client
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['username', 'email', 'role', 'company', 'is_active']
-    list_filter = ['role', 'company', 'is_active']
+    list_display = ['username', 'email', 'role', 'is_active']
+    list_filter = ['role', 'is_active']
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Additional Info', {'fields': ('phone', 'role', 'company')}),
+        ('Additional Info', {'fields': ('phone', 'role')}),
     )
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ['client_id', 'user', 'company', 'employment_status']
-    list_filter = ['company', 'employment_status']
+    list_display = ['client_id', 'user', 'employment_status']
+    list_filter = ['employment_status']
