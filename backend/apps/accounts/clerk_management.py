@@ -37,7 +37,7 @@ class ClerkViewSet(viewsets.ViewSet):
             return Response({'error': 'Unauthorized'}, status=403)
         
         data = request.data
-        username = f\"{data['first_name'].lower()}_{data['last_name'].lower()}_clerk\"
+        username = f"{data['first_name'].lower()}_{data['last_name'].lower()}_clerk"
         password = data.get('password', 'Clerk123!')
         
         user = User.objects.create(
