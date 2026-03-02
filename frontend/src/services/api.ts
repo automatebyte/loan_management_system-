@@ -11,7 +11,6 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Don't add auth header for login/register endpoints
   if (config.url?.includes('/login/') || config.url?.includes('/register/')) {
     return config;
   }
@@ -21,30 +20,12 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Enhanced request logging for debugging
-  console.log('API Request:', {
-    url: config.url,
-    method: config.method,
-    hasAuth: !!config.headers.Authorization
-  });
-  
   return config;
 });
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Enhanced error logging
-    console.error('API Error Details:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message
-    });
-    
-    // Clear invalid tokens
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
