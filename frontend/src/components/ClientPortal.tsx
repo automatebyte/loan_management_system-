@@ -51,7 +51,6 @@ const ClientPortal: React.FC = () => {
       const response = await api.get('/api/loans/loans/');
       setLoans(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching loans:', error);
     }
   };
 
@@ -60,7 +59,6 @@ const ClientPortal: React.FC = () => {
       const response = await api.get('/api/loans/transactions/');
       setTransactions(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
     }
   };
 

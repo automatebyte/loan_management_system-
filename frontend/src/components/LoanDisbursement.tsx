@@ -53,7 +53,6 @@ const LoanDisbursement: React.FC<Props> = ({ open, onClose, clientId, onSuccess 
       const response = await api.get('/api/loans/products/available_products/');
       setProducts(response.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 
@@ -62,7 +61,6 @@ const LoanDisbursement: React.FC<Props> = ({ open, onClose, clientId, onSuccess 
       const response = await api.get('/api/auth/clients/my_clients/');
       setClients(response.data);
     } catch (error) {
-      console.error('Error fetching clients:', error);
     }
   };
 

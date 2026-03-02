@@ -45,7 +45,6 @@ const LoanProductManagement: React.FC = () => {
       const response = await api.get('/api/loans/products/');
       setProducts(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching loan products:', error);
     }
   };
 
@@ -71,7 +70,6 @@ const LoanProductManagement: React.FC = () => {
       });
       fetchProducts();
     } catch (error) {
-      console.error('Error saving loan product:', error);
     }
   };
 
@@ -95,7 +93,6 @@ const LoanProductManagement: React.FC = () => {
       await api.patch(`/api/loans/products/${id}/`, { is_active: !currentStatus });
       fetchProducts();
     } catch (error) {
-      console.error('Error updating product status:', error);
     }
   };
 

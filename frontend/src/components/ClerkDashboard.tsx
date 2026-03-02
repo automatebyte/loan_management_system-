@@ -45,7 +45,6 @@ const ClerkDashboard: React.FC = () => {
       });
       setDues(response.data.dues || []);
     } catch (error) {
-      console.error('Error fetching dues:', error);
     }
   };
 
@@ -57,7 +56,6 @@ const ClerkDashboard: React.FC = () => {
       });
       setExpenses(response.data || []);
     } catch (error) {
-      console.error('Error fetching expenses:', error);
     }
   };
 
@@ -69,7 +67,6 @@ const ClerkDashboard: React.FC = () => {
       });
       setDebtAnalysis(response.data || {});
     } catch (error) {
-      console.error('Error fetching debt analysis:', error);
     }
   };
 
@@ -89,7 +86,6 @@ const ClerkDashboard: React.FC = () => {
         receipt: null
       });
     } catch (error) {
-      console.error('Error creating expense:', error);
     }
   };
 

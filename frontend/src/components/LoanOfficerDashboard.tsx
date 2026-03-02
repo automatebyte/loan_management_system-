@@ -61,7 +61,6 @@ const LoanOfficerDashboard: React.FC = () => {
       const response = await api.get('/api/auth/clients/my_clients/');
       setClients(response.data);
     } catch (error) {
-      console.error('Error fetching clients:', error);
     }
   };
 
@@ -70,7 +69,6 @@ const LoanOfficerDashboard: React.FC = () => {
       const response = await api.get('/api/loans/loans/');
       setLoans(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching loans:', error);
     }
   };
 
@@ -80,7 +78,6 @@ const LoanOfficerDashboard: React.FC = () => {
       const response = await api.get('/api/loans/reports/officer_summary/');
       setStats(response.data);
     } catch (error) {
-      console.error('Error fetching portfolio stats:', error);
     }
   };
 

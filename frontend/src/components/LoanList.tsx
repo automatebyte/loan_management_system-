@@ -21,7 +21,6 @@ const LoanList: React.FC<LoanListProps> = ({ userRole }) => {
       const response = await loanAPI.getLoans();
       setLoans(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching loans:', error);
     }
   };
 
@@ -30,7 +29,6 @@ const LoanList: React.FC<LoanListProps> = ({ userRole }) => {
       await loanAPI.approveLoan(id);
       fetchLoans();
     } catch (error) {
-      console.error('Error approving loan:', error);
     }
   };
 
@@ -39,7 +37,6 @@ const LoanList: React.FC<LoanListProps> = ({ userRole }) => {
       await loanAPI.disburseLoan(id);
       fetchLoans();
     } catch (error) {
-      console.error('Error disbursing loan:', error);
     }
   };
 

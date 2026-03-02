@@ -19,7 +19,6 @@ const Reports: React.FC = () => {
       const response = await api.get('/api/loans/reports/summary/');
       setSummary(response.data);
     } catch (error) {
-      console.error('Error fetching summary:', error);
     }
   };
 
