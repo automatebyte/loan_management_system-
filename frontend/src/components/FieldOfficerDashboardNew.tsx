@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography, Card, CardContent } from '@mui/material';
-import { TrendingUp, AttachMoney, People, AccountBalance } from '@mui/icons-material';
+import { TrendingUp, AttachMoney, People, AccountBalance, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import ResponsiveNavbar from './common/ResponsiveNavbar';
