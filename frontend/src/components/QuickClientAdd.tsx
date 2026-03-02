@@ -123,6 +123,10 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
       address: '',
       monthly_income: '',
       employment_status: 'employed',
+      occupation: '',
+      industry: '',
+      home_location: '',
+      business_location: '',
       next_of_kin: [{full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}],
       guarantor: {full_name: '', id_number: '', phone: '', occupation: ''}
     });
