@@ -55,6 +55,9 @@ class Client(BaseModel):
     )
     loan_officer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_clients')
     
+    next_of_kin = models.JSONField(default=list, blank=True)
+    guarantor = models.JSONField(default=dict, blank=True)
+    
     def save(self, *args, **kwargs):
         if not self.client_id:
             self.client_id = generate_client_id()

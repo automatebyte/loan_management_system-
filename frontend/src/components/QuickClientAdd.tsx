@@ -24,9 +24,11 @@ interface ClientData {
   address: string;
   monthly_income: string;
   employment_status: string;
+  next_of_kin: Array<{full_name: string; relationship: string; phone: string}>;
+  guarantor: {full_name: string; id_number: string; phone: string; occupation: string};
 }
 
-const steps = ['Basic Info', 'Financial Info', 'Verification'];
+const steps = ['Basic Info', 'Financial Info', 'Next of Kin', 'Guarantor', 'Verification'];
 
 const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -43,7 +45,9 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
     national_id: '',
     address: '',
     monthly_income: '',
-    employment_status: 'employed'
+    employment_status: 'employed',
+    next_of_kin: [{full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}],
+    guarantor: {full_name: '', id_number: '', phone: '', occupation: ''}
   });
 
   const handleNext = () => {
@@ -63,6 +67,10 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
       case 1:
         return !!(clientData.monthly_income && clientData.employment_status);
       case 2:
+        return clientData.next_of_kin.some(kin => kin.full_name && kin.phone);
+      case 3:
+        return !!(clientData.guarantor.full_name && clientData.guarantor.phone);
+      case 4:
         return !!(clientData.national_id);
       default:
         return true;
@@ -106,7 +114,9 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
       national_id: '',
       address: '',
       monthly_income: '',
-      employment_status: 'employed'
+      employment_status: 'employed',
+      next_of_kin: [{full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}, {full_name: '', relationship: '', phone: ''}],
+      guarantor: {full_name: '', id_number: '', phone: '', occupation: ''}
     });
     setAlert(null);
     onClose();
@@ -217,6 +227,76 @@ const QuickClientAdd: React.FC<Props> = ({ open, onClose, onSuccess }) => {
         );
       
       case 2:
+        return (
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Next of Kin (At least 1 required)</Typography>
+            </Grid>
+            {clientData.next_of_kin.map((kin, index) => (
+              <React.Fragment key={index}>
+                <Grid item xs={12}><Typography variant="subtitle2">Next of Kin {index + 1}</Typography></Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Full Name" value={kin.full_name}
+                    onChange={(e) => {
+                      const updated = [...clientData.next_of_kin];
+                      updated[index].full_name = e.target.value;
+                      setClientData({ ...clientData, next_of_kin: updated });
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Relationship" value={kin.relationship}
+                    onChange={(e) => {
+                      const updated = [...clientData.next_of_kin];
+                      updated[index].relationship = e.target.value;
+                      setClientData({ ...clientData, next_of_kin: updated });
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Phone" value={kin.phone}
+                    onChange={(e) => {
+                      const updated = [...clientData.next_of_kin];
+                      updated[index].phone = e.target.value;
+                      setClientData({ ...clientData, next_of_kin: updated });
+                    }}
+                  />
+                </Grid>
+              </React.Fragment>
+            ))}
+          </Grid>
+        );
+      
+      case 3:
+        return (
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Guarantor Information</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Full Name *" value={clientData.guarantor.full_name}
+                onChange={(e) => setClientData({ ...clientData, guarantor: {...clientData.guarantor, full_name: e.target.value} })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="ID Number *" value={clientData.guarantor.id_number}
+                onChange={(e) => setClientData({ ...clientData, guarantor: {...clientData.guarantor, id_number: e.target.value} })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Phone Number *" value={clientData.guarantor.phone}
+                onChange={(e) => setClientData({ ...clientData, guarantor: {...clientData.guarantor, phone: e.target.value} })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Occupation/Business *" value={clientData.guarantor.occupation}
+                onChange={(e) => setClientData({ ...clientData, guarantor: {...clientData.guarantor, occupation: e.target.value} })}
+              />
+            </Grid>
+          </Grid>
+        );
+      
+      case 4:
         return (
           <Grid container spacing={2}>
             <Grid item xs={12}>

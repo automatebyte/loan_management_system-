@@ -43,7 +43,7 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = ['id', 'client_id', 'full_name', 'email', 'date_of_birth', 'national_id',
                  'address', 'monthly_income', 'employment_status', 'identification_picture',
-                 'loan_officer_name', 'loan_count', 'created_at', 'is_active']
+                 'loan_officer_name', 'loan_count', 'next_of_kin', 'guarantor', 'created_at', 'is_active']
         read_only_fields = ['client_id', 'full_name', 'email', 'loan_officer_name', 'loan_count']
     
     def get_loan_count(self, obj):
@@ -67,12 +67,14 @@ class ClientCreateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     password = serializers.CharField(write_only=True, default='client123')
+    next_of_kin = serializers.JSONField(required=False, default=list)
+    guarantor = serializers.JSONField(required=False, default=dict)
     
     class Meta:
         model = Client
         fields = ['username', 'email', 'first_name', 'last_name', 'password',
                  'date_of_birth', 'national_id', 'address', 'monthly_income', 
-                 'employment_status', 'identification_picture']
+                 'employment_status', 'identification_picture', 'next_of_kin', 'guarantor']
     
     def create(self, validated_data):
         user_data = {
