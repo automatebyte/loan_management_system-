@@ -23,7 +23,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: https://kreditai-frontend.onrender.com,https://kreditai.onrender.com
+        value: https://kreditai1.onrender.com,https://kreditai-frontend.onrender.com,https://kreditai.onrender.com
 
   - type: web
     name: kreditai-frontend
