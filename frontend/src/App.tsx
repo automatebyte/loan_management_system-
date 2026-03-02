@@ -4,7 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/Login';
 import AdminDashboardNew from './components/AdminDashboardNew';
-import FieldOfficerDashboardNew from './components/FieldOfficerDashboardNew';
+import FieldOfficerDashboardNew2 from './components/FieldOfficerDashboardNew2';
 import ClerkDashboardNew from './components/ClerkDashboardNew';
 
 const theme = createTheme({
@@ -142,8 +142,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<AdminDashboardNew />} />
-          <Route path="/field-officer" element={<FieldOfficerDashboardNew />} />
-          <Route path="/loan-officer" element={<FieldOfficerDashboardNew />} />
+          <Route path="/field-officer" element={<FieldOfficerDashboardNew2 />} />
+          <Route path="/loan-officer" element={<FieldOfficerDashboardNew2 />} />
           <Route path="/clerk" element={<ClerkDashboardNew />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
